@@ -567,22 +567,22 @@ export default function App() {
         `}
       </style>
 
-      {/* Top Navigation Bar */}
-      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-8 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
+      {/* Top Navigation Bar - Widened Padding */}
+      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-6 md:px-10 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
         <RVALogo large={false} theme={currentTheme} />
         
-        <div className="flex items-center gap-3 flex-nowrap justify-center">
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap md:flex-nowrap justify-center">
           {isStaff && selectedStudentId && !showAdminPanel && (
             <button 
               onClick={() => { setViewAsStudent(!viewAsStudent); setShowSettings(false); }} 
               className={`flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full transition-all border-2 border-black whitespace-nowrap ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
               {viewAsStudent ? <EyeOff size={16} /> : <Eye size={16} />} 
-              <span className="hidden md:inline">{viewAsStudent ? 'Exit Student View' : 'View as Student'}</span>
+              <span className="hidden lg:inline">{viewAsStudent ? 'Exit Student View' : 'View as Student'}</span>
             </button>
           )}
           
           {isStaff && !showAdminPanel && (
-            <select className={`p-2.5 bg-white border-2 border-black rounded-xl text-sm font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors max-w-[200px] truncate`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
+            <select className={`p-2.5 bg-white border-2 border-black rounded-xl text-sm font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors max-w-[160px] md:max-w-[200px] truncate shrink`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
               <option value="">-- Select Student --</option>
               {studentsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -594,12 +594,12 @@ export default function App() {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-black transition-colors font-bold text-sm whitespace-nowrap ${showAdminPanel ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`} 
               title="Admin Settings">
               <Shield size={16} />
-              <span className="hidden md:inline">{showAdminPanel ? 'Exit Admin' : 'Admin'}</span>
+              <span className="hidden lg:inline">{showAdminPanel ? 'Exit Admin' : 'Admin'}</span>
             </button>
           )}
 
           {uploadTargetId && (
-            <div className="relative w-11 h-11 rounded-full border-2 border-black overflow-hidden group cursor-pointer shrink-0 ml-2 shadow-sm bg-gray-200 flex items-center justify-center">
+            <div className="relative w-11 h-11 rounded-full border-2 border-black overflow-hidden group cursor-pointer shrink-0 ml-1 shadow-sm bg-gray-200 flex items-center justify-center">
               {displayPhoto ? (
                 <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -613,7 +613,7 @@ export default function App() {
           )}
 
           <div className="relative flex items-center">
-            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-2.5 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors ml-1 shrink-0" title="Color Theme">
+            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-2.5 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors shrink-0" title="Color Theme">
               <Palette size={20} className="text-gray-700" />
             </button>
             {showThemeMenu && (
@@ -630,7 +630,7 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold ml-1 p-2 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
+          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
             <LogOut size={20} />
           </button>
         </div>
@@ -789,11 +789,11 @@ export default function App() {
                   <input type="number" disabled={isStartingScoreLocked} className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none ${isStartingScoreLocked ? 'bg-gray-200 opacity-70 cursor-not-allowed' : `bg-gray-50 focus:${currentTheme.border}`}`} value={startingScore} onChange={e => setStartingScore(e.target.value === '' ? '' : Number(e.target.value))} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Daily Score (+ / -)</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 h-4 flex items-center">Manually Edit Daily Score (+ / -)</label>
                   <input type="number" className={`w-full p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={teacherDailyAdjustment} onChange={e => setTeacherDailyAdjustment(e.target.value === '' ? '' : Number(e.target.value))} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Overall Score (+ / -)</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 h-4 flex items-center">Manually Edit Overall Score (+ / -)</label>
                   <input type="number" className={`w-full p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={teacherAdjustment} onChange={e => setTeacherAdjustment(e.target.value === '' ? '' : Number(e.target.value))} />
                 </div>
                 <div className="md:col-span-3 mt-2">
