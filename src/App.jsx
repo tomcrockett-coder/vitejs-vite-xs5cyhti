@@ -792,4 +792,256 @@ export default function App() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Daily Score (+ / -
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Daily Score (+ / -)</label>
+                  <input type="number" className={`w-full p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={teacherDailyAdjustment} onChange={e => setTeacherDailyAdjustment(e.target.value === '' ? '' : Number(e.target.value))} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Overall Score (+ / -)</label>
+                  <input type="number" className={`w-full p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={teacherAdjustment} onChange={e => setTeacherAdjustment(e.target.value === '' ? '' : Number(e.target.value))} />
+                </div>
+                <div className="md:col-span-3 mt-2">
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Goal Text (e.g. "No missing work", "Less than 5 missing")</label>
+                  <input type="text" className={`w-full p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={goalText} onChange={e => setGoalText(e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <h3 className="font-black text-lg text-gray-800 border-b-2 border-gray-100 pb-2 flex items-center gap-2"><Activity size={20} className={currentTheme.text}/> Tracked Classes</h3>
+              {subjects.map((sub, i) => (
+                <div key={i} className="flex gap-2">
+                  <input className={`flex-1 p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={sub} onChange={e => { const n = [...subjects]; n[i] = e.target.value; setSubjects(n); }} />
+                  <button onClick={() => setSubjects(subjects.filter((_, idx) => idx !== i))} className="p-3 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all shrink-0"><Trash2 size={20}/></button>
+                </div>
+              ))}
+              <button onClick={() => setSubjects([...subjects, ''])} className="px-4 py-3 bg-emerald-50 text-[#2D6A4F] font-bold rounded-xl hover:bg-emerald-100 transition-all text-sm border-2 border-black">+ Add Class</button>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <h3 className="font-black text-lg text-gray-800 border-b-2 border-gray-100 pb-2 flex items-center gap-2"><CheckCircle2 size={20} className="text-[#2D6A4F]"/> Target Habits</h3>
+              {habits.map((hab, i) => (
+                <div key={i} className="flex gap-2">
+                  <input className={`flex-1 p-3 bg-gray-50 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={hab} onChange={e => { const n = [...habits]; n[i] = e.target.value; setHabits(n); }} />
+                  <button onClick={() => setHabits(habits.filter((_, idx) => idx !== i))} className="p-3 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all shrink-0"><Trash2 size={20}/></button>
+                </div>
+              ))}
+              <button onClick={() => setHabits([...habits, ''])} className="px-4 py-3 bg-emerald-50 text-[#2D6A4F] font-bold rounded-xl hover:bg-emerald-100 transition-all text-sm border-2 border-black">+ Add Habit</button>
+            </div>
+
+            <div className="pt-6 border-t border-gray-100 flex flex-col md:flex-row gap-4">
+              <button onClick={saveSettings} className={`flex-1 py-4 ${currentTheme.primary} text-white font-black rounded-xl ${currentTheme.hover} transition-all shadow-md border-2 border-black border-b-[6px] active:border-b-2 active:translate-y-[4px]`}>Save Settings</button>
+              <button onClick={() => setShowSettings(false)} className="px-8 py-4 bg-white border-2 border-black text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
+            </div>
+          </div>
+        </div>
+      ) : !selectedStudentId ? (
+        isStaff ? (
+          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500`}>
+            <Activity size={48} className="text-white opacity-20 mx-auto mb-4" />
+            <h2 className="text-3xl font-black text-white mb-2">Ready to Equip?</h2>
+            <p className="text-white/80 text-lg">Select a student from the menu above to start your session.</p>
+          </div>
+        ) : (
+          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500 flex flex-col items-center justify-center`}>
+            <Loader2 size={48} className="text-white animate-spin mx-auto mb-4" />
+            <h2 className="text-2xl font-black text-white">Loading your dashboard...</h2>
+          </div>
+        )
+      ) : (
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Health Score Panel */}
+            <div className={`bg-slate-200 rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} flex flex-col md:flex-row items-center justify-between gap-8 transition-colors duration-500`}>
+              <div className="flex-1 text-center md:text-left">
+                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Academic Health</h1>
+                <div className="flex items-center justify-center md:justify-start gap-2 text-orange-500 mt-2 font-black uppercase text-xs tracking-widest">
+                  <Flame size={16} fill="currentColor" /> {currentStreak} Day Streak
+                </div>
+              </div>
+              <div className="flex items-center gap-8">
+                <div className="flex flex-col items-center">
+                  <div className="relative flex items-center justify-center w-24 h-24 font-black text-2xl">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 * (1 - todayScore/100)} className={`${getHealthColor(todayScore)} transition-all duration-1000`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute">{todayScore}</div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Today</span>
+                </div>
+                <div className="flex flex-col items-center relative">
+                  <div className="relative flex items-center justify-center w-32 h-32 font-black text-4xl">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="10" />
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray="283" strokeDashoffset={283 * (1 - Math.min(healthScore, 100)/100)} className={`${getHealthColor(healthScore)} transition-all duration-1000`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute">{healthScore}</div>
+                    {fireworksActive && <Sparkles size={60} className="absolute text-yellow-500 animate-bounce" />}
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Overall</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Submission Panel */}
+            {!isEffectivelyStaff && (
+              <div className={`bg-slate-200 rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                {isSubmittedToday && !isEditingToday ? (
+                  <div className="text-center py-10">
+                    <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-emerald-100"><CheckCircle2 size={40} className="text-[#2D6A4F]" /></div>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">Check-in Complete!</h2>
+                    <p className="text-gray-500 mb-8">You've logged your progress for today.</p>
+                    <button onClick={() => setIsEditingToday(true)} className="px-6 py-3 bg-white border-2 border-black text-gray-700 font-bold rounded-xl hover:bg-gray-50"><Edit3 size={18} className="inline mr-2" /> Edit Entry</button>
+                  </div>
+                ) : (
+                  <div className="space-y-8 animate-in fade-in duration-300">
+                    <h2 className={`text-xl font-black flex items-center gap-2 ${currentTheme.text}`}><Activity size={24} /> Today's Focus</h2>
+                    
+                    <div className="bg-white border-2 border-gray-200 p-6 rounded-3xl shadow-sm">
+                      <p className="font-bold text-gray-800 mb-4">Select classes with <strong className={currentTheme.text}>{goalText}</strong>:</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {activeSubjects.map(sub => (
+                          <button 
+                            key={sub} 
+                            onClick={() => { const current = todayData.caughtUpSubjects.includes(sub); setTodayData({...todayData, caughtUpSubjects: current ? todayData.caughtUpSubjects.filter(s => s !== sub) : [...todayData.caughtUpSubjects, sub]}); current ? playUnclick() : playClick(); setIsNoneSubjects(false); }} 
+                            className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all text-left flex items-center gap-3 border-black ${todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                            {todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? <CheckCircle2 size={18} className="shrink-0" /> : <Circle size={18} className="text-gray-400 shrink-0" />} 
+                            <span className="leading-tight">{sub}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <button 
+                        onClick={() => { const next = !isNoneSubjects; setIsNoneSubjects(next); setTodayData({...todayData, caughtUpSubjects: []}); next ? playClick() : playUnclick(); }} 
+                        className={`mt-4 w-full p-4 rounded-xl border-2 font-bold transition-all border-black text-left flex items-center gap-3 ${isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        {isNoneSubjects ? <CheckCircle2 size={18} className="shrink-0" /> : <Circle size={18} className="text-gray-400 shrink-0" />} 
+                        <span className="leading-tight">I am not fully caught up in any classes yet.</span>
+                      </button>
+                    </div>
+
+                    <div className="bg-white border-2 border-gray-200 p-6 rounded-3xl shadow-sm">
+                      <p className="font-bold text-gray-800 mb-4">Target Habits:</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {activeHabits.map(hab => (
+                          <button 
+                            key={hab} 
+                            onClick={() => { const current = todayData.completedHabits.includes(hab); setTodayData({...todayData, completedHabits: current ? todayData.completedHabits.filter(h => h !== hab) : [...todayData.completedHabits, hab]}); current ? playUnclick() : playClick(); setIsNoneHabits(false); }} 
+                            className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all text-left flex items-center gap-3 border-black ${todayData.completedHabits.includes(hab) && !isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                            {todayData.completedHabits.includes(hab) && !isNoneHabits ? <CheckCircle2 size={18} className="shrink-0" /> : <Circle size={18} className="text-gray-400 shrink-0" />} 
+                            <span className="leading-tight">{hab}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <button 
+                        onClick={() => { const next = !isNoneHabits; setIsNoneHabits(next); setTodayData({...todayData, completedHabits: []}); next ? playClick() : playUnclick(); }} 
+                        className={`mt-4 w-full p-4 rounded-xl border-2 font-bold transition-all border-black text-left flex items-center gap-3 ${isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        {isNoneHabits ? <CheckCircle2 size={18} className="shrink-0" /> : <Circle size={18} className="text-gray-400 shrink-0" />} 
+                        <span className="leading-tight">I did not meet these habit goals today.</span>
+                      </button>
+                    </div>
+
+                    {/* Student Comment Area */}
+                    <div className="bg-white border-2 border-gray-200 p-6 rounded-3xl shadow-sm">
+                      <p className="font-bold text-gray-800 mb-4">Do you want to add a comment for your instructor?</p>
+                      <textarea 
+                        className={`w-full p-4 rounded-xl border-2 border-black font-bold text-sm text-gray-700 outline-none focus:${currentTheme.border} resize-none h-24`}
+                        placeholder="Type your message here..."
+                        value={todayData.newNote}
+                        onChange={(e) => setTodayData({...todayData, newNote: e.target.value})}
+                      />
+                    </div>
+
+                    <button onClick={submitToday} className={`w-full py-5 ${currentTheme.primary} ${currentTheme.hover} text-white font-black text-xl shadow-lg border-2 border-black border-b-[6px] active:border-b-2 active:translate-y-[4px] transition-all flex items-center justify-center gap-2`}><Send /> Save Daily Progress</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* History Panel */}
+            <div className="space-y-4 pt-4">
+              <div className="flex justify-between items-center px-2">
+                <h2 className="text-xl font-black flex items-center gap-2 text-gray-800"><Calendar size={20} /> Submission History</h2>
+                {history.length > 0 && (
+                  <button 
+                    onClick={() => exportToCSV(history, `Equip_Data_${studentsList.find(s=>s.id===selectedStudentId)?.name || 'Student'}_${new Date().toISOString().split('T')[0]}.csv`)} 
+                    className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                    <Download size={14} /> Export CSV
+                  </button>
+                )}
+              </div>
+              
+              {history.length === 0 ? (
+                <div className="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-3xl bg-slate-200">
+                  <p className="text-gray-500 font-bold">No entries found for this student.</p>
+                </div>
+              ) : (
+                history.map(day => (
+                  <div key={day.id} className={`bg-slate-200 rounded-[32px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                    <div className="flex justify-between mb-4">
+                      <div className="font-black text-lg text-gray-900">{day.date}</div>
+                      <div className={`px-4 py-1 rounded-full text-white font-black text-sm border border-black/20 ${getHealthBg(Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100))}`}>
+                        {Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100)}%
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {day.caughtUpSubjects?.map(s => <span key={s} className="px-3 py-1 bg-white text-[#2D6A4F] rounded-lg text-xs font-bold border-2 border-black">✓ {s}</span>)}
+                      {day.completedHabits?.map(h => <span key={h} className="px-3 py-1 bg-white text-[#2D6A4F] rounded-lg text-xs font-bold border-2 border-black">✓ {h}</span>)}
+                    </div>
+                    
+                    <div className="bg-white p-4 rounded-2xl space-y-3 shadow-sm border-2 border-black">
+                      {day.notes?.map((n, i) => (
+                        <div key={i} className={`flex flex-col ${n.author === 'Mr. Crockett' ? 'items-end' : 'items-start'}`}>
+                          <div className={`p-3 rounded-2xl max-w-[85%] text-sm font-bold border-2 border-black ${n.author === 'Mr. Crockett' ? `${currentTheme.primary} text-white rounded-br-none` : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>{n.text}</div>
+                          <span className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-bold">{n.author} • {n.time}</span>
+                        </div>
+                      ))}
+                      {isEffectivelyStaff && (
+                        <div className="flex gap-2 pt-2 mt-2 border-t-2 border-gray-100">
+                          <input type="text" placeholder="Reply..." className={`flex-1 p-2 text-sm rounded-xl border-2 border-black outline-none focus:${currentTheme.border}`} value={replyTexts[day.id] || ''} onChange={e => setReplyTexts({...replyTexts, [day.id]: e.target.value})} onKeyDown={e => e.key === 'Enter' && submitReply(day.id)} />
+                          <button onClick={() => submitReply(day.id)} className={`p-2 px-3 ${currentTheme.primary} border-2 border-black text-white rounded-xl ${currentTheme.hover} transition-colors`}><Send size={16} /></button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+          </div>
+
+          <div className="space-y-6">
+            {/* Research Panel Sidebar */}
+            <div className={`bg-slate-200 rounded-[40px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+              <h2 className="text-xl font-black mb-6 flex items-center gap-2"><Zap className="text-yellow-500" /> What Works for Me?</h2>
+              {!researchUnlocked ? (
+                <div className="text-center py-12 px-4 border-2 border-dashed border-gray-400 rounded-3xl bg-white">
+                  <p className="text-gray-500 font-bold">Reach {startingScore + 10}% Overall Health to unlock your custom "What Works for Me?" panel!</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.keys(researchData).map(cat => (
+                    <div key={cat} className={`p-4 rounded-2xl border-2 border-black transition-all ${researchData[cat].approved ? 'bg-emerald-50' : 'bg-white'}`}>
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em]">{cat}</h3>
+                        {isEffectivelyStaff && <button onClick={() => handleApproveResearch(cat)} className={`p-1.5 rounded-lg transition-colors border-2 border-black ${researchData[cat].approved ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-100'}`}><Zap size={14} /></button>}
+                        {!isEffectivelyStaff && researchData[cat].approved && <Sparkles size={14} className="text-[#2D6A4F]" />}
+                      </div>
+                      {cat !== 'extra' ? (
+                        <select className="w-full p-2 text-sm font-bold rounded-lg bg-gray-50 outline-none border-2 border-black text-gray-800" disabled={isEffectivelyStaff || researchData[cat].approved}>
+                          <option value="">Pending entry...</option>
+                        </select>
+                      ) : (
+                        <textarea className="w-full p-3 text-sm font-bold rounded-lg bg-gray-50 outline-none border-2 border-black text-gray-800 h-24" placeholder="Notes..." disabled={isEffectivelyStaff || researchData[cat].approved} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
+      )}
+    </div>
+  );
+}
