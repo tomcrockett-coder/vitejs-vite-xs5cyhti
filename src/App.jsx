@@ -568,7 +568,7 @@ export default function App() {
       </style>
 
       {/* Top Navigation Bar - Widened Padding */}
-      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-6 md:px-10 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
+      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full pl-6 pr-10 md:pl-12 md:pr-16 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
         <RVALogo large={false} theme={currentTheme} />
         
         <div className="flex items-center gap-2 md:gap-3 flex-wrap md:flex-nowrap justify-center">
@@ -630,7 +630,7 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
+          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0 md:mr-4 lg:mr-8">
             <LogOut size={20} />
           </button>
         </div>
