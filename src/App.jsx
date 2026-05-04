@@ -567,8 +567,8 @@ export default function App() {
         `}
       </style>
 
-      {/* Top Navigation Bar - Widened Padding */}
-      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full pl-6 pr-10 md:pl-12 md:pr-16 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
+      {/* Top Navigation Bar - Corrected Spacing */}
+      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-6 md:px-8 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
         <RVALogo large={false} theme={currentTheme} />
         
         <div className="flex items-center gap-2 md:gap-3 flex-wrap md:flex-nowrap justify-center">
@@ -577,7 +577,7 @@ export default function App() {
               onClick={() => { setViewAsStudent(!viewAsStudent); setShowSettings(false); }} 
               className={`flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full transition-all border-2 border-black whitespace-nowrap ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
               {viewAsStudent ? <EyeOff size={16} /> : <Eye size={16} />} 
-              <span className="hidden lg:inline">{viewAsStudent ? 'Exit Student View' : 'View as Student'}</span>
+              <span className="hidden lg:inline">{viewAsStudent ? 'Exit View' : 'Student View'}</span>
             </button>
           )}
           
@@ -630,7 +630,7 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0 md:mr-4 lg:mr-8">
+          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
             <LogOut size={20} />
           </button>
         </div>
