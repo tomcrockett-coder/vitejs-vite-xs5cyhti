@@ -337,6 +337,7 @@ export default function App() {
       if (useRedirect) await signInWithRedirect(auth, provider);
       else await signInWithPopup(auth, provider);
     } catch (error) {
+      console.error("Auth Error: ", error);
       setAuthError(error.message);
     } finally { setIsLoggingIn(false); }
   };
@@ -520,11 +521,9 @@ export default function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen animated-gradient-bg flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: `linear-gradient(to top, ${currentTheme.hex}15 0%, #f8fafc 40%, #ffffff 100%)` }}>
         <style>
           {`
-            @keyframes bgFadeInUp { 0% { background-position: 50% 100%; } 100% { background-position: 50% 0%; } }
-            .animated-gradient-bg { background: linear-gradient(to top, #cbd5e1 0%, #f8fafc 40%, #ffffff 100%); background-size: 100% 250%; animation: bgFadeInUp 2s ease-out forwards; }
             @keyframes typing { from { width: 0; } to { width: 100%; } }
             .typewriter { overflow: hidden; white-space: nowrap; width: 0; animation: typing 1.5s steps(24, end) forwards; animation-delay: 0.5s; }
           `}
@@ -559,26 +558,24 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen animated-gradient-bg p-4 md:p-8 font-sans text-gray-800 flex flex-col items-center transition-colors duration-500">
+    <div className="min-h-screen p-4 md:p-8 font-sans text-gray-800 flex flex-col items-center transition-colors duration-500" style={{ background: `linear-gradient(to top, ${currentTheme.hex}10 0%, #f8fafc 40%, #ffffff 100%)` }}>
       
       <style>
         {`
-          @keyframes bgFadeInUp { 0% { background-position: 50% 100%; } 100% { background-position: 50% 0%; } }
-          .animated-gradient-bg { background: linear-gradient(to top, #cbd5e1 0%, #f8fafc 40%, #ffffff 100%); background-size: 100% 250%; animation: bgFadeInUp 2s ease-out forwards; }
           @keyframes typing { from { width: 0; } to { width: 100%; } }
           .typewriter { overflow: hidden; white-space: nowrap; width: 0; animation: typing 1.5s steps(24, end) forwards; animation-delay: 0.5s; }
         `}
       </style>
 
       {/* Top Navigation Bar */}
-      <div className={`w-full max-w-6xl bg-slate-200 rounded-2xl md:rounded-full px-8 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
+      <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-8 py-5 md:py-4 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors duration-500`}>
         <RVALogo large={false} theme={currentTheme} />
         
-        <div className="flex items-center gap-3 flex-wrap justify-center">
+        <div className="flex items-center gap-3 flex-nowrap justify-center">
           {isStaff && selectedStudentId && !showAdminPanel && (
             <button 
               onClick={() => { setViewAsStudent(!viewAsStudent); setShowSettings(false); }} 
-              className={`flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full transition-all border-2 border-black ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+              className={`flex items-center gap-2 text-sm font-bold px-4 py-2.5 rounded-full transition-all border-2 border-black whitespace-nowrap ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
               {viewAsStudent ? <EyeOff size={16} /> : <Eye size={16} />} 
               <span className="hidden md:inline">{viewAsStudent ? 'Exit Student View' : 'View as Student'}</span>
             </button>
@@ -594,7 +591,7 @@ export default function App() {
           {userRole === 'admin' && (
             <button 
               onClick={() => { setShowAdminPanel(!showAdminPanel); setSelectedStudentId(null); setShowSettings(false); }} 
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-black transition-colors font-bold text-sm ${showAdminPanel ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`} 
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-full border-2 border-black transition-colors font-bold text-sm whitespace-nowrap ${showAdminPanel ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`} 
               title="Admin Settings">
               <Shield size={16} />
               <span className="hidden md:inline">{showAdminPanel ? 'Exit Admin' : 'Admin'}</span>
@@ -616,7 +613,7 @@ export default function App() {
           )}
 
           <div className="relative flex items-center">
-            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-2.5 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors ml-1" title="Color Theme">
+            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-2.5 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors ml-1 shrink-0" title="Color Theme">
               <Palette size={20} className="text-gray-700" />
             </button>
             {showThemeMenu && (
@@ -633,7 +630,7 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold ml-1 p-2 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors">
+          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold ml-1 p-2 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
             <LogOut size={20} />
           </button>
         </div>
@@ -641,7 +638,7 @@ export default function App() {
 
       {/* Settings Link */}
       {isStaff && selectedStudentId && !showAdminPanel && !viewAsStudent && (
-        <div className="w-full max-w-6xl text-right mb-6 px-4 flex justify-between items-center">
+        <div className="w-full max-w-7xl text-right mb-6 px-4 flex justify-between items-center">
           <div className="text-sm font-bold text-gray-500 flex items-center gap-2">
             <UserPlus size={16} /> Pre-load students via Admin Dashboard
           </div>
@@ -654,7 +651,7 @@ export default function App() {
       )}
 
       {showAdminPanel ? (
-        <div className={`w-full max-w-6xl ${currentTheme.primary} rounded-[40px] p-8 md:p-12 shadow-lg border-[3px] ${currentTheme.borderDark} mt-4 text-center transition-colors duration-500`}>
+        <div className={`w-full max-w-7xl ${currentTheme.primary} rounded-[40px] p-8 md:p-12 shadow-lg border-[3px] ${currentTheme.borderDark} mt-4 text-center transition-colors duration-500`}>
           <Shield size={48} className="text-white opacity-20 mx-auto mb-4" />
           <h2 className="text-3xl font-black text-white mb-4">Admin Dashboard</h2>
           <p className="text-white/80 text-lg mb-8">Manage user access and pre-load student profiles before their first login.</p>
@@ -770,7 +767,7 @@ export default function App() {
           </button>
         </div>
       ) : showSettings ? (
-        <div className={`w-full max-w-6xl bg-slate-200 rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} mt-4 transition-colors duration-500`}>
+        <div className={`w-full max-w-7xl bg-slate-200/80 backdrop-blur-md rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} mt-4 transition-colors duration-500`}>
           <div className="flex items-center justify-center gap-3 mb-8">
             <Settings size={32} className={currentTheme.text} />
             <h2 className="text-3xl font-black text-gray-900">Student Configuration</h2>
@@ -781,15 +778,15 @@ export default function App() {
               <h3 className="font-black text-lg text-gray-800 border-b-2 border-gray-100 pb-2 flex items-center gap-2"><Flame size={20} className="text-orange-500"/> Scoring Metrics</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Starting Health Score</label>
-                  <div className="flex gap-2">
-                    <input type="number" disabled={isStartingScoreLocked} className={`flex-1 p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none ${isStartingScoreLocked ? 'bg-gray-200 opacity-70 cursor-not-allowed' : `bg-gray-50 focus:${currentTheme.border}`}`} value={startingScore} onChange={e => setStartingScore(e.target.value === '' ? '' : Number(e.target.value))} />
+                  <div className="flex items-center justify-between mb-1.5 h-4">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Starting Health Score</label>
                     {isStartingScoreLocked && (
-                      <button onClick={() => setIsStartingScoreLocked(false)} className="p-3 border-2 border-black rounded-xl bg-white hover:bg-gray-50 transition-colors shrink-0" title="Unlock Score">
-                        <Edit3 size={18} className="text-gray-500" />
+                      <button onClick={() => setIsStartingScoreLocked(false)} className="text-gray-400 hover:text-gray-700 transition-colors" title="Unlock Score">
+                        <Edit3 size={14} />
                       </button>
                     )}
                   </div>
+                  <input type="number" disabled={isStartingScoreLocked} className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none ${isStartingScoreLocked ? 'bg-gray-200 opacity-70 cursor-not-allowed' : `bg-gray-50 focus:${currentTheme.border}`}`} value={startingScore} onChange={e => setStartingScore(e.target.value === '' ? '' : Number(e.target.value))} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Manually Edit Daily Score (+ / -)</label>
@@ -848,45 +845,12 @@ export default function App() {
           </div>
         )
       ) : (
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Health Score Panel */}
-            <div className={`bg-slate-200 rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} flex flex-col md:flex-row items-center justify-between gap-8 transition-colors duration-500`}>
-              <div className="flex-1 text-center md:text-left">
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Academic Health</h1>
-                <div className="flex items-center justify-center md:justify-start gap-2 text-orange-500 mt-2 font-black uppercase text-xs tracking-widest">
-                  <Flame size={16} fill="currentColor" /> {currentStreak} Day Streak
-                </div>
-              </div>
-              <div className="flex items-center gap-8">
-                <div className="flex flex-col items-center">
-                  <div className="relative flex items-center justify-center w-24 h-24 font-black text-2xl">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="8" />
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 * (1 - todayScore/100)} className={`${getHealthColor(todayScore)} transition-all duration-1000`} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute">{todayScore}</div>
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Today</span>
-                </div>
-                <div className="flex flex-col items-center relative">
-                  <div className="relative flex items-center justify-center w-32 h-32 font-black text-4xl">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="10" />
-                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray="283" strokeDashoffset={283 * (1 - Math.min(healthScore, 100)/100)} className={`${getHealthColor(healthScore)} transition-all duration-1000`} strokeLinecap="round" />
-                    </svg>
-                    <div className="absolute">{healthScore}</div>
-                    {fireworksActive && <Sparkles size={60} className="absolute text-yellow-500 animate-bounce" />}
-                  </div>
-                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Overall</span>
-                </div>
-              </div>
-            </div>
-
             {/* Daily Submission Panel */}
             {!isEffectivelyStaff && (
-              <div className={`bg-slate-200 rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
                 {isSubmittedToday && !isEditingToday ? (
                   <div className="text-center py-10">
                     <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-emerald-100"><CheckCircle2 size={40} className="text-[#2D6A4F]" /></div>
@@ -900,7 +864,7 @@ export default function App() {
                     
                     <div className="bg-white border-2 border-gray-200 p-6 rounded-3xl shadow-sm">
                       <p className="font-bold text-gray-800 mb-4">Select classes with <strong className={currentTheme.text}>{goalText}</strong>:</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {activeSubjects.map(sub => (
                           <button 
                             key={sub} 
@@ -940,7 +904,6 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Student Comment Area */}
                     <div className="bg-white border-2 border-gray-200 p-6 rounded-3xl shadow-sm">
                       <p className="font-bold text-gray-800 mb-4">Do you want to add a comment for your instructor?</p>
                       <textarea 
@@ -965,18 +928,18 @@ export default function App() {
                   <button 
                     onClick={() => exportToCSV(history, `Equip_Data_${studentsList.find(s=>s.id===selectedStudentId)?.name || 'Student'}_${new Date().toISOString().split('T')[0]}.csv`)} 
                     className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
-                    <Download size={14} /> Export CSV
+                    <Download size={14} /> Export Data
                   </button>
                 )}
               </div>
               
               {history.length === 0 ? (
-                <div className="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-3xl bg-slate-200">
+                <div className="text-center py-8 px-4 border-2 border-dashed border-gray-300 rounded-3xl bg-slate-200/50">
                   <p className="text-gray-500 font-bold">No entries found for this student.</p>
                 </div>
               ) : (
                 history.map(day => (
-                  <div key={day.id} className={`bg-slate-200 rounded-[32px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                  <div key={day.id} className={`bg-slate-200/80 backdrop-blur-md rounded-[32px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
                     <div className="flex justify-between mb-4">
                       <div className="font-black text-lg text-gray-900">{day.date}</div>
                       <div className={`px-4 py-1 rounded-full text-white font-black text-sm border border-black/20 ${getHealthBg(Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100))}`}>
@@ -1010,8 +973,42 @@ export default function App() {
           </div>
 
           <div className="space-y-6">
+            
+            {/* COMPACT Health Score Panel (Moved to Sidebar) */}
+            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[40px] p-6 shadow-sm border-[3px] ${currentTheme.border} flex flex-col items-center gap-6 transition-colors duration-500`}>
+              <div className="text-center">
+                <h1 className="text-2xl font-black text-gray-900 tracking-tight">Academic Health</h1>
+                <div className="flex items-center justify-center gap-2 text-orange-500 mt-1 font-black uppercase text-xs tracking-widest">
+                  <Flame size={14} fill="currentColor" /> {currentStreak} Day Streak
+                </div>
+              </div>
+              <div className="flex w-full justify-around items-center">
+                <div className="flex flex-col items-center">
+                  <div className="relative flex items-center justify-center w-20 h-20 font-black text-xl">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 * (1 - todayScore/100)} className={`${getHealthColor(todayScore)} transition-all duration-1000`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute">{todayScore}</div>
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Today</span>
+                </div>
+                <div className="flex flex-col items-center relative">
+                  <div className="relative flex items-center justify-center w-24 h-24 font-black text-3xl">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="10" />
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray="283" strokeDashoffset={283 * (1 - Math.min(healthScore, 100)/100)} className={`${getHealthColor(healthScore)} transition-all duration-1000`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute">{healthScore}</div>
+                    {fireworksActive && <Sparkles size={40} className="absolute text-yellow-500 animate-bounce" />}
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-gray-500 mt-2 tracking-widest">Overall</span>
+                </div>
+              </div>
+            </div>
+
             {/* Research Panel Sidebar */}
-            <div className={`bg-slate-200 rounded-[40px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[40px] p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
               <h2 className="text-xl font-black mb-6 flex items-center gap-2"><Zap className="text-yellow-500" /> What Works for Me?</h2>
               {!researchUnlocked ? (
                 <div className="text-center py-12 px-4 border-2 border-dashed border-gray-400 rounded-3xl bg-white">
