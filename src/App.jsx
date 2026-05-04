@@ -306,6 +306,7 @@ export default function App() {
       if (useRedirect) await signInWithRedirect(auth, provider);
       else await signInWithPopup(auth, provider);
     } catch (error) {
+      console.error("Auth Error: ", error);
       setAuthError(error.message);
     } finally { setIsLoggingIn(false); }
   };
@@ -542,6 +543,16 @@ export default function App() {
           <button onClick={() => handleLogin()} disabled={isLoggingIn} className={`w-full py-4 rounded-2xl ${currentTheme.primary} ${currentTheme.hover} text-white font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-lg border-2 border-black border-b-[6px] active:border-b-2 active:translate-y-[4px] disabled:opacity-50`}>
             {isLoggingIn ? <Loader2 className="animate-spin" /> : "Sign in with Google"}
           </button>
+
+          {/* Error Message Display */}
+          {authError && (
+            <div className="mt-6 p-4 bg-red-50 border-2 border-red-500 text-red-700 font-bold rounded-xl text-sm animate-in fade-in slide-in-from-bottom-2">
+              ⚠️ {authError}
+              <div className="text-xs font-normal mt-2 text-red-600">
+                (Note: Make sure your Vercel URL is added to the Authorized Domains in Firebase Authentication Settings!)
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
