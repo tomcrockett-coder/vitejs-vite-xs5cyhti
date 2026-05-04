@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Activity, CheckCircle2, Circle, Send, Calendar, LogOut, Edit3, Zap, Sparkles, Flame, Shield, Loader2, Eye, EyeOff, Settings, Trash2, Users, Camera, Download, Palette } from 'lucide-react';
+import { Activity, CheckCircle2, Circle, Send, Calendar, LogOut, Edit3, Zap, Sparkles, Flame, Shield, Loader2, Eye, EyeOff, Settings, Trash2, Users, Camera, Download, Palette, UserPlus } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, getDocs, deleteDoc } from 'firebase/firestore';
@@ -36,7 +36,7 @@ fetchAudio('unclick', 'https://assets.mixkit.co/active_storage/sfx/2570/2570-pre
 fetchAudio('ding', 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 fetchAudio('powerup', 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
 
-// Resume audio context on first interaction (silent unlock to prevent lag)
+// Resume audio context on first interaction
 const initAudioCtx = () => {
   if (audioContext.state === 'suspended') audioContext.resume();
 };
@@ -51,10 +51,8 @@ const playSound = (key, volume = 1, rate = 1) => {
   const source = audioContext.createBufferSource();
   source.buffer = audioBuffers[key];
   source.playbackRate.value = rate;
-  
   const gainNode = audioContext.createGain();
   gainNode.gain.value = volume;
-  
   source.connect(gainNode);
   gainNode.connect(audioContext.destination);
   source.start(0);
@@ -67,31 +65,16 @@ const playPowerup = () => playSound('powerup', 0.5, 1.0);
 
 // --- THEME ENGINE ---
 const THEMES = {
-  burgundy: {
-    id: 'burgundy', name: 'Classic Burgundy',
-    primary: 'bg-[#8B1D3B]', hover: 'hover:bg-[#6A152C]', text: 'text-[#8B1D3B]', hoverText: 'hover:text-[#6A152C]',
-    border: 'border-[#8B1D3B]', borderDark: 'border-[#6A152C]', hex: '#8B1D3B', imageFilter: 'none'
-  },
-  navy: {
-    id: 'navy', name: 'Midnight Navy',
-    primary: 'bg-[#1E3A8A]', hover: 'hover:bg-[#172554]', text: 'text-[#1E3A8A]', hoverText: 'hover:text-[#172554]',
-    border: 'border-[#1E3A8A]', borderDark: 'border-[#172554]', hex: '#1E3A8A', imageFilter: 'hue-rotate(-120deg) brightness(0.9) saturate(1.2)'
-  },
-  forest: {
-    id: 'forest', name: 'Evergreen',
-    primary: 'bg-[#064E3B]', hover: 'hover:bg-[#022C22]', text: 'text-[#064E3B]', hoverText: 'hover:text-[#022C22]',
-    border: 'border-[#064E3B]', borderDark: 'border-[#022C22]', hex: '#064E3B', imageFilter: 'hue-rotate(170deg) brightness(0.8) saturate(1.1)'
-  },
-  plum: {
-    id: 'plum', name: 'Royal Plum',
-    primary: 'bg-[#4C1D95]', hover: 'hover:bg-[#2E1065]', text: 'text-[#4C1D95]', hoverText: 'hover:text-[#2E1065]',
-    border: 'border-[#4C1D95]', borderDark: 'border-[#2E1065]', hex: '#4C1D95', imageFilter: 'hue-rotate(-60deg) saturate(1.3)'
-  }
+  burgundy: { id: 'burgundy', name: 'Classic Burgundy', primary: 'bg-[#8B1D3B]', hover: 'hover:bg-[#6A152C]', text: 'text-[#8B1D3B]', hoverText: 'hover:text-[#6A152C]', border: 'border-[#8B1D3B]', borderDark: 'border-[#6A152C]', hex: '#8B1D3B', imageFilter: 'none' },
+  navy: { id: 'navy', name: 'Midnight Navy', primary: 'bg-[#1E3A8A]', hover: 'hover:bg-[#172554]', text: 'text-[#1E3A8A]', hoverText: 'hover:text-[#172554]', border: 'border-[#1E3A8A]', borderDark: 'border-[#172554]', hex: '#1E3A8A', imageFilter: 'hue-rotate(-120deg) brightness(0.9) saturate(1.2)' },
+  forest: { id: 'forest', name: 'Evergreen', primary: 'bg-[#064E3B]', hover: 'hover:bg-[#022C22]', text: 'text-[#064E3B]', hoverText: 'hover:text-[#022C22]', border: 'border-[#064E3B]', borderDark: 'border-[#022C22]', hex: '#064E3B', imageFilter: 'hue-rotate(170deg) brightness(0.8) saturate(1.1)' },
+  plum: { id: 'plum', name: 'Royal Plum', primary: 'bg-[#4C1D95]', hover: 'hover:bg-[#2E1065]', text: 'text-[#4C1D95]', hoverText: 'hover:text-[#2E1065]', border: 'border-[#4C1D95]', borderDark: 'border-[#2E1065]', hex: '#4C1D95', imageFilter: 'hue-rotate(-60deg) saturate(1.3)' }
 };
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [loggedInDocId, setLoggedInDocId] = useState(null);
   const [studentsList, setStudentsList] = useState([]);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [authError, setAuthError] = useState(null);
@@ -136,37 +119,68 @@ export default function App() {
   // Admin User Management State
   const [allowedUsersList, setAllowedUsersList] = useState([]);
   const [newAllowedEmail, setNewAllowedEmail] = useState('');
-  const [newAllowedRole, setNewAllowedRole] = useState('student');
+  const [newAllowedRole, setNewAllowedRole] = useState('teacher');
+  const [preloadName, setPreloadName] = useState('');
+  const [preloadEmail, setPreloadEmail] = useState('');
+  const [adminMessage, setAdminMessage] = useState({ text: '', type: '' });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [confirmStaffDelete, setConfirmStaffDelete] = useState(null);
 
   const activeHabits = habits.filter(h => h.trim() !== '');
   const activeSubjects = subjects.filter(s => s.trim() !== '');
   const currentTheme = THEMES[userThemeId] || THEMES.burgundy;
 
+  const showAdminMsg = (text, type = 'success') => {
+    setAdminMessage({ text, type });
+    setTimeout(() => setAdminMessage({ text: '', type: '' }), 6000);
+  };
+
   // --- AUTHENTICATION & SYNC LOGIC ---
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        if (currentUser.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          setUserRole('admin');
-          setUser(currentUser);
-          await loadTeacherData(currentUser);
+        const userEmail = currentUser.email.toLowerCase();
+        let role = 'student'; // Default
+
+        if (userEmail === ADMIN_EMAIL.toLowerCase()) {
+          role = 'admin';
         } else {
-          const allowedDocRef = doc(db, 'allowed_users', currentUser.email.toLowerCase());
+          const allowedDocRef = doc(db, 'allowed_users', userEmail);
           const allowedDoc = await getDoc(allowedDocRef);
-          
           if (allowedDoc.exists()) {
-            const role = allowedDoc.data().role || 'student';
-            setUserRole(role);
-            setUser(currentUser);
-            if (role === 'student') setSelectedStudentId(currentUser.uid);
-            else await loadTeacherData(currentUser);
-          } else {
-            setUserRole('unauthorized');
-            setUser(currentUser);
+            role = allowedDoc.data().role || 'student';
           }
         }
+
+        // Check if teacher preloaded them by email
+        let docId = currentUser.uid;
+        const stubDocRef = doc(db, 'users', userEmail);
+        const stubDoc = await getDoc(stubDocRef);
         
-        onSnapshot(doc(db, 'users', currentUser.uid), (snap) => {
+        if (stubDoc.exists() && stubDoc.data().preloaded) {
+          docId = userEmail; // Adopt the preloaded profile ID
+        }
+
+        setLoggedInDocId(docId);
+
+        // Auto-register/sync the user to the database
+        await setDoc(doc(db, 'users', docId), {
+          name: currentUser.displayName || stubDoc.data()?.name || userEmail.split('@')[0],
+          email: userEmail,
+          role: role,
+          uid: currentUser.uid 
+        }, { merge: true });
+
+        setUserRole(role);
+        setUser(currentUser);
+
+        if (role === 'student') {
+          setSelectedStudentId(docId);
+        } else {
+          await loadTeacherData(currentUser);
+        }
+        
+        onSnapshot(doc(db, 'users', docId), (snap) => {
             if(snap.exists()) {
               if (snap.data().photoURL) setMyPhoto(snap.data().photoURL);
               if (snap.data().theme) setUserThemeId(snap.data().theme);
@@ -178,6 +192,8 @@ export default function App() {
       } else {
         setUser(null);
         setUserRole(null);
+        setSelectedStudentId(null);
+        setLoggedInDocId(null);
       }
     });
     return () => unsubscribe();
@@ -188,7 +204,7 @@ export default function App() {
     const fetchedStudents = [];
     usersSnap.forEach(d => {
       const data = d.data();
-      if (data.role === 'student' || (!data.role && data.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase())) {
+      if (data.role === 'student' || (!data.role && data.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase())) {
         fetchedStudents.push({ id: d.id, ...data });
       }
     });
@@ -203,13 +219,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (userRole === 'admin' && showAdminPanel) {
-      fetchAllowedUsers();
-    }
+    if (userRole === 'admin' && showAdminPanel) fetchAllowedUsers();
   }, [userRole, showAdminPanel]);
 
   useEffect(() => {
-    if (!user || !selectedStudentId || userRole === 'unauthorized') return;
+    if (!user || !selectedStudentId) return;
 
     const unsubUser = onSnapshot(doc(db, 'users', selectedStudentId), (docSnap) => {
       if(docSnap.exists()) setStudentPhoto(docSnap.data().photoURL || null);
@@ -231,6 +245,12 @@ export default function App() {
         if (d.startingScore !== undefined) setStartingScore(d.startingScore);
         if (d.teacherAdjustment !== undefined) setTeacherAdjustment(d.teacherAdjustment);
         if (d.teacherDailyAdjustment !== undefined) setTeacherDailyAdjustment(d.teacherDailyAdjustment);
+      } else {
+        // Reset to defaults for a new student selection
+        setGoalText('NO missing work');
+        setHabits(['Sat at my desk', 'No phone during work', '']);
+        setSubjects(['Social Studies', 'Health', 'Language Arts', 'Math', 'Science', 'Lexia']);
+        setStartingScore(0); setTeacherAdjustment(0); setTeacherDailyAdjustment(0);
       }
     });
 
@@ -239,7 +259,7 @@ export default function App() {
     });
 
     return () => { unsubUser(); unsubHistory(); unsubSettings(); unsubResearch(); };
-  }, [user, selectedStudentId, userRole]);
+  }, [user, selectedStudentId]);
 
   const todayId = new Date().toISOString().split('T')[0];
   const todaysHistory = history.find(h => h.id === todayId);
@@ -249,11 +269,7 @@ export default function App() {
 
   useEffect(() => {
     if (isEditingToday && todaysHistory) {
-      setTodayData({
-        caughtUpSubjects: todaysHistory.caughtUpSubjects || [],
-        completedHabits: todaysHistory.completedHabits || [],
-        newNote: ''
-      });
+      setTodayData({ caughtUpSubjects: todaysHistory.caughtUpSubjects || [], completedHabits: todaysHistory.completedHabits || [], newNote: '' });
       setIsNoneSubjects(todaysHistory.caughtUpSubjects?.length === 0);
       setIsNoneHabits(todaysHistory.completedHabits?.length === 0);
     }
@@ -293,8 +309,8 @@ export default function App() {
   const changeTheme = async (newThemeId) => {
     setUserThemeId(newThemeId);
     setShowThemeMenu(false);
-    if (user) {
-      await setDoc(doc(db, 'users', user.uid), { theme: newThemeId }, { merge: true });
+    if (loggedInDocId) {
+      await setDoc(doc(db, 'users', loggedInDocId), { theme: newThemeId }, { merge: true });
     }
   };
 
@@ -365,40 +381,72 @@ export default function App() {
     setShowSettings(false);
   };
 
-  const handleAddAllowedUser = async () => {
+  const handlePreloadStudent = async () => {
+    if (!preloadName.trim() || !preloadEmail.trim()) {
+      showAdminMsg("Please enter both a name and an email address.", "error");
+      return;
+    }
+    const emailId = preloadEmail.toLowerCase().trim();
+    
+    // Check if they already exist
+    const existingStudent = studentsList.find(s => s.email?.toLowerCase() === emailId);
+    if (existingStudent) {
+      showAdminMsg("This student already has a profile! You can configure them from the main dropdown menu.", "error");
+      return;
+    }
+
+    // Add to allowed_users
+    await setDoc(doc(db, 'allowed_users', emailId), {
+      role: 'student',
+      addedAt: new Date().toISOString()
+    });
+
+    // Create user stub
+    await setDoc(doc(db, 'users', emailId), {
+      name: preloadName.trim(),
+      email: emailId,
+      role: 'student',
+      preloaded: true
+    }, { merge: true });
+
+    setPreloadName('');
+    setPreloadEmail('');
+    fetchAllowedUsers();
+    if(user) loadTeacherData(user);
+    showAdminMsg(`${preloadName.trim()} has been pre-loaded successfully! Select them from the dropdown above to configure their dashboard.`);
+  };
+
+  const handleAddStaff = async () => {
     if (!newAllowedEmail.trim()) return;
-    await setDoc(doc(db, 'allowed_users', newAllowedEmail.toLowerCase().trim()), {
+    const emailId = newAllowedEmail.toLowerCase().trim();
+    await setDoc(doc(db, 'allowed_users', emailId), {
       role: newAllowedRole,
       addedAt: new Date().toISOString()
     });
     setNewAllowedEmail('');
     fetchAllowedUsers();
+    showAdminMsg(`${emailId} was granted ${newAllowedRole} access.`);
   };
 
-  const handleDeleteAllowedUser = async (email) => {
-    if(window.confirm(`Remove access for ${email}?`)) {
-      await deleteDoc(doc(db, 'allowed_users', email));
-      fetchAllowedUsers();
-    }
+  const executeDeleteStaff = async (email) => {
+    await deleteDoc(doc(db, 'allowed_users', email));
+    fetchAllowedUsers();
+    setConfirmStaffDelete(null);
   };
 
-  const handleDeleteStudent = async (studentId, studentName) => {
-    if(window.confirm(`Are you sure you want to permanently delete all data for ${studentName}? This cannot be undone.`)) {
-      await deleteDoc(doc(db, 'users', studentId));
-      
-      const studentObj = studentsList.find(s => s.id === studentId);
-      if (studentObj && studentObj.email) {
-        await deleteDoc(doc(db, 'allowed_users', studentObj.email.toLowerCase()));
-      }
-      
-      if (selectedStudentId === studentId) setSelectedStudentId(null);
-      loadTeacherData(user);
+  const executeDeleteStudent = async (studentId, studentEmail) => {
+    await deleteDoc(doc(db, 'users', studentId));
+    if (studentEmail) {
+      await deleteDoc(doc(db, 'allowed_users', studentEmail.toLowerCase()));
     }
+    if (selectedStudentId === studentId) setSelectedStudentId(null);
+    loadTeacherData(user);
+    setConfirmDeleteId(null);
   };
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
-    const targetId = selectedStudentId || (user ? user.uid : null);
+    const targetId = selectedStudentId || loggedInDocId;
     if (!file || !targetId) return;
 
     const reader = new FileReader();
@@ -425,7 +473,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const uploadTargetId = selectedStudentId || (user ? user.uid : null);
+  const uploadTargetId = selectedStudentId || loggedInDocId;
   const displayPhoto = selectedStudentId ? studentPhoto : myPhoto;
 
   // --- DATA EXPORT LOGIC ---
@@ -544,7 +592,6 @@ export default function App() {
             {isLoggingIn ? <Loader2 className="animate-spin" /> : "Sign in with Google"}
           </button>
 
-          {/* Error Message Display */}
           {authError && (
             <div className="mt-6 p-4 bg-red-50 border-2 border-red-500 text-red-700 font-bold rounded-xl text-sm animate-in fade-in slide-in-from-bottom-2">
               ⚠️ {authError}
@@ -602,7 +649,7 @@ export default function App() {
           )}
           
           {isStaff && !showAdminPanel && (
-            <select className={`p-2.5 bg-white border-2 border-black rounded-xl text-sm font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
+            <select className={`p-2.5 bg-white border-2 border-black rounded-xl text-sm font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors max-w-[200px] truncate`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
               <option value="">-- Select Student --</option>
               {studentsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -654,11 +701,14 @@ export default function App() {
 
       {/* Settings Link */}
       {isStaff && selectedStudentId && !showAdminPanel && !viewAsStudent && (
-        <div className="w-full max-w-6xl text-right mb-6 px-4">
+        <div className="w-full max-w-6xl text-right mb-6 px-4 flex justify-between items-center">
+          <div className="text-sm font-bold text-gray-500 flex items-center gap-2">
+            <UserPlus size={16} /> Pre-load students via Admin Dashboard
+          </div>
           <button 
             onClick={() => setShowSettings(!showSettings)} 
-            className={`${currentTheme.text} ${currentTheme.hoverText} font-black text-sm uppercase tracking-widest transition-colors flex items-center justify-end gap-1 ml-auto underline underline-offset-4 decoration-2`}>
-            <Settings size={14} /> {showSettings ? 'Close Configuration' : 'Configure Student Information'}
+            className={`${currentTheme.text} ${currentTheme.hoverText} font-black text-sm uppercase tracking-widest transition-colors flex items-center gap-1 underline underline-offset-4 decoration-2`}>
+            <Settings size={14} /> {showSettings ? 'Close Configuration' : 'Configure Student Profile'}
           </button>
         </div>
       )}
@@ -667,61 +717,116 @@ export default function App() {
         <div className={`w-full max-w-6xl ${currentTheme.primary} rounded-[40px] p-8 md:p-12 shadow-lg border-[3px] ${currentTheme.borderDark} mt-4 text-center transition-colors duration-500`}>
           <Shield size={48} className="text-white opacity-20 mx-auto mb-4" />
           <h2 className="text-3xl font-black text-white mb-4">Admin Dashboard</h2>
-          <p className="text-white/80 text-lg mb-8">Welcome to the Admin side. Global settings, configurations, and user management live here.</p>
+          <p className="text-white/80 text-lg mb-8">Manage user access and pre-load student profiles before their first login.</p>
           
-          <div className="bg-white p-8 rounded-3xl border-2 border-black text-left space-y-6 max-w-4xl mx-auto shadow-sm mt-8 mb-8">
-            <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-200 pb-2 mb-4">
-              <h3 className={`font-black text-xl flex items-center gap-2 ${currentTheme.text}`}><Users size={24} /> User Access Management</h3>
-              <button 
-                onClick={handleBulkExport} 
-                disabled={isExporting || studentsList.length === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-[#2D6A4F] border-2 border-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-100 transition-all disabled:opacity-50">
-                {isExporting ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />} 
-                Master Data Export
-              </button>
-            </div>
+          <div className="max-w-4xl mx-auto text-left">
             
-            <div className="flex flex-col md:flex-row gap-3">
-              <input type="email" placeholder="Google Email Address..." className={`flex-1 p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={newAllowedEmail} onChange={e => setNewAllowedEmail(e.target.value)} />
-              <select className={`p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={newAllowedRole} onChange={e => setNewAllowedRole(e.target.value)}>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher (Staff)</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button onClick={handleAddAllowedUser} className={`px-6 py-3 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold rounded-xl border-2 border-black transition-colors`}>Add User</button>
+            {adminMessage.text && (
+              <div className={`mb-6 p-4 rounded-xl border-2 font-bold animate-in fade-in slide-in-from-top-2 ${adminMessage.type === 'error' ? 'bg-red-50 text-red-700 border-red-500' : 'bg-emerald-50 text-emerald-700 border-[#2D6A4F]'}`}>
+                {adminMessage.type === 'error' ? '⚠️' : '✅'} {adminMessage.text}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Preload Student Box */}
+              <div className="bg-white p-8 rounded-3xl border-2 border-black shadow-sm flex flex-col h-full">
+                <h3 className={`font-black text-xl flex items-center gap-2 mb-2 ${currentTheme.text}`}><Users size={24} /> Pre-load Student</h3>
+                <p className="text-xs text-gray-500 font-bold mb-6 flex-1">Create a profile using their email address. This allows you to configure their classes and baseline score before they ever log in.</p>
+                <div className="space-y-3">
+                  <input type="text" placeholder="Student First & Last Name..." className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={preloadName} onChange={e => setPreloadName(e.target.value)} />
+                  <input type="email" placeholder="Student Google Email..." className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={preloadEmail} onChange={e => setPreloadEmail(e.target.value)} />
+                  <button onClick={handlePreloadStudent} className={`w-full py-3 mt-2 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold rounded-xl border-2 border-black transition-colors flex justify-center items-center gap-2`}>
+                    <UserPlus size={18} /> Pre-load Profile
+                  </button>
+                </div>
+              </div>
+
+              {/* Staff Access Box */}
+              <div className="bg-white p-8 rounded-3xl border-2 border-black shadow-sm flex flex-col h-full">
+                <h3 className={`font-black text-xl flex items-center gap-2 mb-2 ${currentTheme.text}`}><Shield size={24} /> Grant Staff Access</h3>
+                <p className="text-xs text-gray-500 font-bold mb-6 flex-1">Authorize a teacher or administrator to access the system and manage student dashboards.</p>
+                <div className="space-y-3">
+                  <input type="email" placeholder="Staff Email Address..." className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={newAllowedEmail} onChange={e => setNewAllowedEmail(e.target.value)} />
+                  <select className={`w-full p-3 border-2 border-black rounded-xl font-bold text-gray-700 outline-none focus:${currentTheme.border}`} value={newAllowedRole} onChange={e => setNewAllowedRole(e.target.value)}>
+                    <option value="teacher">Teacher (Staff)</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button onClick={handleAddStaff} className={`w-full py-3 mt-2 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold rounded-xl border-2 border-black transition-colors`}>Authorize Staff</button>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-2">
-              {allowedUsersList.map(u => (
-                <div key={u.email} className="flex justify-between items-center p-4 border-2 border-black rounded-xl bg-gray-50 hover:bg-white transition-colors">
-                  <div>
-                    <div className="font-bold text-gray-900">{u.email}</div>
-                    <div className={`text-xs font-black uppercase tracking-widest mt-1 ${currentTheme.text}`}>{u.role}</div>
+            {/* List Management Box */}
+            <div className="bg-white p-8 rounded-3xl border-2 border-black shadow-sm mb-8">
+              
+              <div className="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-200 pb-4 mb-6">
+                <h3 className={`font-black text-xl flex items-center gap-2 ${currentTheme.text}`}>System Database</h3>
+                <button 
+                  onClick={handleBulkExport} 
+                  disabled={isExporting || studentsList.length === 0}
+                  className="flex items-center gap-2 px-4 py-2 mt-4 md:mt-0 bg-emerald-50 text-[#2D6A4F] border-2 border-black rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-100 transition-all disabled:opacity-50">
+                  {isExporting ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />} 
+                  Master Data Export
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Students List */}
+                <div>
+                  <h4 className="font-black text-gray-800 mb-3 flex items-center gap-2"><Users size={18} className="text-gray-400"/> Registered Students</h4>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                    {studentsList.map(s => (
+                      <div key={s.id} className="flex justify-between items-center p-3 border-2 border-black rounded-xl bg-gray-50 hover:bg-white transition-colors">
+                        <div>
+                          <div className="font-bold text-gray-900 text-sm">{s.name}</div>
+                          <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-0.5">{s.email}</div>
+                        </div>
+                        {confirmDeleteId === s.id ? (
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => executeDeleteStudent(s.id, s.email)} className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded border-2 border-black hover:bg-red-600">Yes</button>
+                            <button onClick={() => setConfirmDeleteId(null)} className="px-2 py-1 bg-white text-gray-700 text-xs font-bold rounded border-2 border-black hover:bg-gray-100">No</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => setConfirmDeleteId(s.id)} className="p-1.5 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                        )}
+                      </div>
+                    ))}
+                    {studentsList.length === 0 && <div className="text-gray-500 font-bold p-4 text-sm border-2 border-dashed border-gray-300 rounded-xl text-center">No students found.</div>}
                   </div>
-                  {u.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && (
-                    <button onClick={() => handleDeleteAllowedUser(u.email)} className="p-2 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18}/></button>
-                  )}
                 </div>
-              ))}
+
+                {/* Staff List */}
+                <div>
+                  <h4 className="font-black text-gray-800 mb-3 flex items-center gap-2"><Shield size={18} className="text-gray-400"/> Authorized Staff</h4>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                    {allowedUsersList.filter(u => u.role !== 'student').map(u => (
+                      <div key={u.email} className="flex justify-between items-center p-3 border-2 border-black rounded-xl bg-gray-50 hover:bg-white transition-colors">
+                        <div>
+                          <div className="font-bold text-gray-900 text-sm truncate max-w-[150px]">{u.email}</div>
+                          <div className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${currentTheme.text}`}>{u.role}</div>
+                        </div>
+                        {u.email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() && (
+                          confirmStaffDelete === u.email ? (
+                            <div className="flex items-center gap-1">
+                              <button onClick={() => executeDeleteStaff(u.email)} className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded border-2 border-black hover:bg-red-600">Yes</button>
+                              <button onClick={() => setConfirmStaffDelete(null)} className="px-2 py-1 bg-white text-gray-700 text-xs font-bold rounded border-2 border-black hover:bg-gray-100">No</button>
+                            </div>
+                          ) : (
+                            <button onClick={() => setConfirmStaffDelete(u.email)} className="p-1.5 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <h3 className={`font-black text-xl border-b-2 border-gray-200 pb-2 flex items-center gap-2 mt-8 ${currentTheme.text}`}><Users size={24} /> Registered Students (Data)</h3>
-            <div className="space-y-3 mt-4 max-h-[300px] overflow-y-auto pr-2">
-              {studentsList.map(s => (
-                <div key={s.id} className="flex justify-between items-center p-4 border-2 border-black rounded-xl bg-gray-50 hover:bg-white transition-colors">
-                  <div>
-                    <div className="font-bold text-gray-900">{s.name}</div>
-                    <div className="text-xs font-black uppercase tracking-widest text-gray-500 mt-1">{s.email}</div>
-                  </div>
-                  <button onClick={() => handleDeleteStudent(s.id, s.name)} className="p-2 border-2 border-black text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Delete Student Record"><Trash2 size={18}/></button>
-                </div>
-              ))}
-              {studentsList.length === 0 && <div className="text-gray-500 font-bold p-4">No registered students found.</div>}
-            </div>
           </div>
 
-          <button onClick={() => setShowAdminPanel(false)} className={`px-8 py-4 bg-white ${currentTheme.text} font-bold rounded-2xl hover:bg-gray-100 transition-all shadow-xl border-2 border-black`}>
-            Return to Student Selection
+          <button onClick={() => setShowAdminPanel(false)} className={`px-8 py-4 bg-white ${currentTheme.text} font-bold rounded-2xl hover:bg-gray-100 transition-all shadow-xl border-2 border-black inline-flex items-center gap-2`}>
+            Return to Dashboard
           </button>
         </div>
       ) : showSettings ? (
@@ -783,11 +888,18 @@ export default function App() {
           </div>
         </div>
       ) : !selectedStudentId ? (
-        <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500`}>
-          <Activity size={48} className="text-white opacity-20 mx-auto mb-4" />
-          <h2 className="text-3xl font-black text-white mb-2">Ready to Equip?</h2>
-          <p className="text-white/80 text-lg">Select a student from the menu above to start your session.</p>
-        </div>
+        isStaff ? (
+          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500`}>
+            <Activity size={48} className="text-white opacity-20 mx-auto mb-4" />
+            <h2 className="text-3xl font-black text-white mb-2">Ready to Equip?</h2>
+            <p className="text-white/80 text-lg">Select a student from the menu above to start your session.</p>
+          </div>
+        ) : (
+          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500 flex flex-col items-center justify-center`}>
+            <Loader2 size={48} className="text-white animate-spin mx-auto mb-4" />
+            <h2 className="text-2xl font-black text-white">Loading your dashboard...</h2>
+          </div>
+        )
       ) : (
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
