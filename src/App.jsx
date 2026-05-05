@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Activity, CheckCircle2, Circle, Send, Calendar, LogOut, Edit3, Zap, Sparkles, Flame, Shield, Loader2, Eye, EyeOff, Settings, Trash2, Users, Camera, Download, Palette, UserPlus, User } from 'lucide-react';
+import { Activity, CheckCircle2, Circle, Send, Calendar, LogOut, Edit3, Zap, Sparkles, Flame, Shield, Loader2, Eye, EyeOff, Settings, Trash2, Users, Camera, Download, Palette, UserPlus, User, BarChart3, TrendingUp, LineChart } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, getDocs, deleteDoc } from 'firebase/firestore';
@@ -320,6 +320,49 @@ export default function App() {
 
   const researchUnlocked = isEffectivelyStaff || (healthScore >= startingScore + 10);
 
+  // --- COMPUTE TRENDS DATA (With Cumulative Overall Score logic) ---
+  const trendsData = useMemo(() => {
+    if (!history || history.length === 0) return null;
+    
+    const sorted = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    let runningEarned = 0;
+    let runningPossible = 0;
+    let bonus = 0;
+    Object.values(researchData).forEach(item => { if (item.approved) bonus += 2; });
+    
+    const cumulativeHistory = sorted.map(day => {
+      const earned = (day.caughtUpSubjects?.length || 0) + (day.completedHabits?.length || 0);
+      const possible = day.possibleCount || (activeSubjects.length + activeHabits.length);
+      runningEarned += earned;
+      runningPossible += possible;
+      
+      let cumulativeBase = Math.round((runningEarned / runningPossible) * 100);
+      const overall = cumulativeBase + startingScore + teacherAdjustment + bonus;
+      
+      return { ...day, cumulativeScore: overall, dailyScore: Math.round((earned/possible)*100) };
+    });
+
+    const recentChart = cumulativeHistory.slice(-14); 
+    
+    const classFrequencies = {};
+    const habitFrequencies = {};
+    
+    history.forEach(day => {
+        (day.caughtUpSubjects || []).forEach(sub => {
+            classFrequencies[sub] = (classFrequencies[sub] || 0) + 1;
+        });
+        (day.completedHabits || []).forEach(hab => {
+            habitFrequencies[hab] = (habitFrequencies[hab] || 0) + 1;
+        });
+    });
+
+    const topClasses = Object.entries(classFrequencies).sort((a, b) => b[1] - a[1]);
+    const topHabits = Object.entries(habitFrequencies).sort((a, b) => b[1] - a[1]);
+
+    return { cumulativeHistory, recentChart, topClasses, topHabits, totalDays: history.length };
+  }, [history, researchData, startingScore, teacherAdjustment]);
+
   // --- ACTIONS ---
   const changeTheme = async (newThemeId) => {
     setUserThemeId(newThemeId);
@@ -472,29 +515,35 @@ export default function App() {
   const displayPhoto = selectedStudentId ? studentPhoto : myPhoto;
 
   const exportToCSV = (data, fileName) => {
-    if (!data || data.length === 0) return;
+    // If using the single student export, data passed in is standard history. We should use the computed cumulativeHistory from trendsData.
+    const exportData = trendsData?.cumulativeHistory || data;
+    if (!exportData || exportData.length === 0) return;
+    
     const headers = [
-      "Date", "Daily Score (%)", "Streak", 
+      "Date", "Daily Score (%)", "Cumulative Overall Score (%)", "Streak", 
       "Possible Classes", "Possible Tasks", "Total Possible Items", 
       "Number of Classes Checked", "Number of Tasks Checked", 
       "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
     ];
-    const rows = data.map(day => {
+    
+    const rows = exportData.map(day => {
       const numClasses = day.caughtUpSubjects?.length || 0;
       const numHabits = day.completedHabits?.length || 0;
       const score = Math.round((numClasses + numHabits) / (day.possibleCount || 1) * 100);
+      const overall = day.cumulativeScore !== undefined ? day.cumulativeScore : score;
       const possClasses = day.possibleClassesCount !== undefined ? day.possibleClassesCount : "N/A";
       const possTasks = day.possibleHabitsCount !== undefined ? day.possibleHabitsCount : "N/A";
       const classesList = (day.caughtUpSubjects || []).join("; ");
       const habitsList = (day.completedHabits || []).join("; ");
       const noteStr = (day.notes || []).map(n => `[${n.author}]: ${n.text}`).join(" | ");
       return [
-        day.date, score, day.streak || 0, 
+        day.date, score, overall, day.streak || 0, 
         possClasses, possTasks, day.possibleCount || 0, 
         numClasses, numHabits, 
         `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
       ].join(",");
     });
+    
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -509,7 +558,7 @@ export default function App() {
     setIsExporting(true);
     let masterData = [];
     const headers = [
-      "Student Name", "Student Email", "Date", "Daily Score (%)", "Streak", 
+      "Student Name", "Student Email", "Date", "Daily Score (%)", "Cumulative Overall Score (%)", "Streak", 
       "Possible Classes", "Possible Tasks", "Total Possible Items", 
       "Number of Classes Checked", "Number of Tasks Checked", 
       "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
@@ -519,11 +568,36 @@ export default function App() {
     try {
       for (const student of studentsList) {
         const hSnap = await getDocs(collection(db, 'users', student.id, 'history'));
-        hSnap.forEach(d => {
-          const day = d.data();
+        const sSnap = await getDoc(doc(db, 'users', student.id, 'settings', 'config'));
+        const rSnap = await getDoc(doc(db, 'users', student.id, 'research', 'habits'));
+
+        let sScore = 0; let tAdj = 0;
+        if (sSnap.exists()) {
+           sScore = sSnap.data().startingScore || 0;
+           tAdj = sSnap.data().teacherAdjustment || 0;
+        }
+        let bonus = 0;
+        if (rSnap.exists()) {
+           Object.values(rSnap.data()).forEach(item => { if (item?.approved) bonus += 2; });
+        }
+
+        const studentHistory = [];
+        hSnap.forEach(d => studentHistory.push(d.data()));
+        studentHistory.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        let runningEarned = 0;
+        let runningPossible = 0;
+
+        studentHistory.forEach(day => {
           const numClasses = day.caughtUpSubjects?.length || 0;
           const numHabits = day.completedHabits?.length || 0;
-          const score = Math.round((numClasses + numHabits) / (day.possibleCount || 1) * 100);
+          const possible = day.possibleCount || 1;
+          const dailyScore = Math.round(((numClasses + numHabits) / possible) * 100);
+          
+          runningEarned += (numClasses + numHabits);
+          runningPossible += possible;
+          const overallScore = Math.round((runningEarned / runningPossible) * 100) + sScore + tAdj + bonus;
+
           const possClasses = day.possibleClassesCount !== undefined ? day.possibleClassesCount : "N/A";
           const possTasks = day.possibleHabitsCount !== undefined ? day.possibleHabitsCount : "N/A";
           const classesList = (day.caughtUpSubjects || []).join("; ");
@@ -531,8 +605,8 @@ export default function App() {
           const noteStr = (day.notes || []).map(n => `[${n.author}]: ${n.text}`).join(" | ");
           
           const row = [
-            student.name, student.email || "N/A", day.date, score, day.streak || 0, 
-            possClasses, possTasks, day.possibleCount || 0, 
+            student.name, student.email || "N/A", day.date, dailyScore, overallScore, day.streak || 0, 
+            possClasses, possTasks, possible, 
             numClasses, numHabits, 
             `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
           ];
@@ -870,18 +944,11 @@ export default function App() {
           </div>
         </div>
       ) : !selectedStudentId ? (
-        isStaff ? (
-          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500`}>
-            <Activity size={48} className="text-white opacity-20 mx-auto mb-4" />
-            <h2 className="text-3xl font-black text-white mb-2">Ready to Equip?</h2>
-            <p className="text-white/80 text-lg">Select a student from the menu above to start your session.</p>
-          </div>
-        ) : (
-          <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500 flex flex-col items-center justify-center`}>
-            <Loader2 size={48} className="text-white animate-spin mx-auto mb-4" />
-            <h2 className="text-2xl font-black text-white">Loading your dashboard...</h2>
-          </div>
-        )
+        <div className={`w-full max-w-3xl ${currentTheme.primary} rounded-[40px] p-12 text-center shadow-lg border-[3px] ${currentTheme.borderDark} mt-8 transition-colors duration-500`}>
+          <Activity size={48} className="text-white opacity-20 mx-auto mb-4" />
+          <h2 className="text-3xl font-black text-white mb-2">Ready to Equip?</h2>
+          <p className="text-white/80 text-lg">Select a student from the menu above to start your session.</p>
+        </div>
       ) : (
         <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -955,6 +1022,137 @@ export default function App() {
                     <button onClick={submitToday} className={`w-full py-5 ${currentTheme.primary} ${currentTheme.hover} text-white font-black text-xl shadow-lg border-2 border-black border-b-[6px] active:border-b-2 active:translate-y-[4px] transition-all flex items-center justify-center gap-2`}><Send /> Save Daily Progress</button>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Trends & Analytics Panel */}
+            {trendsData && trendsData.totalDays > 0 && (
+              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[40px] p-8 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                <div className="flex items-center gap-2 mb-8">
+                  <BarChart3 size={28} className={currentTheme.text} />
+                  <h2 className="text-2xl font-black text-gray-900 tracking-tight">Trends & Analytics</h2>
+                </div>
+                
+                <div className="bg-white p-6 rounded-3xl border-2 border-black shadow-sm mb-6 relative">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm uppercase tracking-widest">
+                      <TrendingUp size={18} className="text-blue-600" /> Score History
+                    </h3>
+                    <div className="flex gap-4 text-[10px] font-bold uppercase tracking-widest bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-500 rounded-sm"></div> Overall</div>
+                      <div className="flex items-center gap-1"><div className="w-3 h-3 bg-gray-300 rounded-sm"></div> Daily</div>
+                    </div>
+                  </div>
+
+                  <div className="h-48 flex items-end gap-2 md:gap-4 border-b-2 border-black pb-0 px-2 relative">
+                    {/* Background Grid Lines */}
+                    <div className="absolute top-0 left-0 w-full border-t-2 border-dashed border-gray-200 -z-10 flex items-start">
+                      <span className="text-[10px] text-gray-400 font-bold -mt-4 ml-1">100%</span>
+                    </div>
+                    <div className="absolute top-1/2 left-0 w-full border-t border-dashed border-gray-200 -z-10 flex items-start">
+                      <span className="text-[10px] text-gray-400 font-bold -mt-4 ml-1">50%</span>
+                    </div>
+                    
+                    {/* Overall Score Trend Line Overlay */}
+                    <div className="absolute inset-0 w-full h-full pointer-events-none z-10 flex px-2 pb-0 mb-[2px]">
+                      <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox={`0 0 100 100`}>
+                        <polyline 
+                          points={trendsData.recentChart.map((day, i) => {
+                            const x = (i + 0.5) * (100 / trendsData.recentChart.length);
+                            const y = 100 - Math.max(Math.min(day.cumulativeScore || 0, 100), 0);
+                            return `${x},${y}`;
+                          }).join(' ')}
+                          fill="none" 
+                          stroke="#3b82f6" // blue-500
+                          strokeWidth="2.5" 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                        />
+                        {trendsData.recentChart.map((day, i) => {
+                          const x = (i + 0.5) * (100 / trendsData.recentChart.length);
+                          const y = 100 - Math.max(Math.min(day.cumulativeScore || 0, 100), 0);
+                          return (
+                            <circle key={i} cx={x} cy={y} r="1.5" fill="#3b82f6" className="drop-shadow-sm" />
+                          );
+                        })}
+                      </svg>
+                    </div>
+
+                    {/* Daily Score Bars */}
+                    {trendsData.recentChart.map((day, index) => {
+                      return (
+                        <div key={day.id + index} className="flex-1 flex flex-col items-center group relative h-full justify-end z-0">
+                          <div 
+                            className={`w-full max-w-[48px] rounded-t-lg transition-all group-hover:opacity-80 border-2 border-b-0 border-black shadow-[inset_0_-4px_0_rgba(0,0,0,0.1)] opacity-40 ${day.dailyScore >= 85 ? 'bg-[#2D6A4F]' : day.dailyScore >= 70 ? 'bg-amber-400' : 'bg-red-400'}`} 
+                            style={{ height: `${Math.max(Math.min(day.dailyScore, 100), 5)}%` }}
+                          ></div>
+                          <span className="text-[10px] font-bold text-gray-600 mt-3 rotate-45 origin-top-left absolute -bottom-8 whitespace-nowrap">
+                            {day.date.substring(5).replace('-', '/')}
+                          </span>
+                          
+                          <div className="absolute bottom-full mb-2 bg-black text-white text-xs font-bold px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none shadow-xl border border-gray-700">
+                            <div className="text-center text-lg">{day.dailyScore}% Daily</div>
+                            <div className="text-center text-blue-300">{day.cumulativeScore}% Overall</div>
+                            <div className="text-[10px] font-normal text-gray-400 mt-1">{day.date}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="h-10 w-full"></div> 
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-6 rounded-3xl border-2 border-black shadow-sm">
+                     <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-widest border-b-2 border-gray-100 pb-2">Most Frequent Classes</h3>
+                     {trendsData.topClasses.length === 0 ? (
+                        <p className="text-sm text-gray-500 font-bold italic">No data yet.</p>
+                     ) : (
+                        <div className="space-y-3">
+                          {trendsData.topClasses.map(([sub, count]) => (
+                            <div key={sub} className="flex justify-between items-center group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors">
+                              <span className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <CheckCircle2 size={16} className="text-[#2D6A4F] opacity-50" /> {sub}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 lg:w-24 h-2 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
+                                  <div className="h-full bg-[#2D6A4F]" style={{ width: `${(count / trendsData.totalDays) * 100}%` }}></div>
+                                </div>
+                                <span className="text-xs font-black bg-gray-100 px-2 py-1 rounded-lg border border-gray-200 min-w-[50px] text-center">
+                                  {count}/{trendsData.totalDays}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                     )}
+                  </div>
+                  
+                  <div className="bg-white p-6 rounded-3xl border-2 border-black shadow-sm">
+                     <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-widest border-b-2 border-gray-100 pb-2">Top Habits Met</h3>
+                     {trendsData.topHabits.length === 0 ? (
+                        <p className="text-sm text-gray-500 font-bold italic">No data yet.</p>
+                     ) : (
+                        <div className="space-y-3">
+                          {trendsData.topHabits.map(([hab, count]) => (
+                            <div key={hab} className="flex justify-between items-center group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-colors">
+                              <span className="text-sm font-bold text-gray-700 truncate mr-2 flex items-center gap-2" title={hab}>
+                                <Sparkles size={16} className="text-blue-500 opacity-50 shrink-0" /> {hab}
+                              </span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <div className="w-16 lg:w-24 h-2 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
+                                  <div className="h-full bg-blue-500" style={{ width: `${(count / trendsData.totalDays) * 100}%` }}></div>
+                                </div>
+                                <span className="text-xs font-black bg-gray-100 px-2 py-1 rounded-lg border border-gray-200 min-w-[50px] text-center">
+                                  {count}/{trendsData.totalDays}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                     )}
+                  </div>
+                </div>
               </div>
             )}
 
