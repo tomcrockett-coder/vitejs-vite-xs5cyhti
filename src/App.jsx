@@ -344,7 +344,9 @@ export default function App() {
 
   const submitToday = async () => {
     if (!selectedStudentId) return;
-    const possibleCount = activeSubjects.length + activeHabits.length;
+    const possibleClassesCount = activeSubjects.length;
+    const possibleHabitsCount = activeHabits.length;
+    const possibleCount = possibleClassesCount + possibleHabitsCount;
     let newStreak = 1;
     if (history.length > 0) {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -353,8 +355,13 @@ export default function App() {
     }
     const newEntry = {
       id: todayId, date: todayId,
-      caughtUpSubjects: todayData.caughtUpSubjects, completedHabits: todayData.completedHabits,
-      possibleCount, streak: newStreak, notes: todaysHistory?.notes || []
+      caughtUpSubjects: todayData.caughtUpSubjects, 
+      completedHabits: todayData.completedHabits,
+      possibleCount, 
+      possibleClassesCount,
+      possibleHabitsCount,
+      streak: newStreak, 
+      notes: todaysHistory?.notes || []
     };
     if (todayData.newNote.trim()) {
       newEntry.notes.push({ author: 'Student', text: todayData.newNote.trim(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) });
@@ -466,13 +473,27 @@ export default function App() {
 
   const exportToCSV = (data, fileName) => {
     if (!data || data.length === 0) return;
-    const headers = ["Date", "Overall Score (%)", "Streak", "Possible Items", "Subjects Caught Up", "Habits Completed", "Notes/Comments"];
+    const headers = [
+      "Date", "Daily Score (%)", "Streak", 
+      "Possible Classes", "Possible Tasks", "Total Possible Items", 
+      "Number of Classes Checked", "Number of Tasks Checked", 
+      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
+    ];
     const rows = data.map(day => {
-      const score = Math.round(((day.caughtUpSubjects?.length || 0) + (day.completedHabits?.length || 0)) / (day.possibleCount || 1) * 100);
-      const classes = (day.caughtUpSubjects || []).join("; ");
-      const habits = (day.completedHabits || []).join("; ");
+      const numClasses = day.caughtUpSubjects?.length || 0;
+      const numHabits = day.completedHabits?.length || 0;
+      const score = Math.round((numClasses + numHabits) / (day.possibleCount || 1) * 100);
+      const possClasses = day.possibleClassesCount !== undefined ? day.possibleClassesCount : "N/A";
+      const possTasks = day.possibleHabitsCount !== undefined ? day.possibleHabitsCount : "N/A";
+      const classesList = (day.caughtUpSubjects || []).join("; ");
+      const habitsList = (day.completedHabits || []).join("; ");
       const noteStr = (day.notes || []).map(n => `[${n.author}]: ${n.text}`).join(" | ");
-      return [ day.date, score, day.streak || 0, day.possibleCount || 0, `"${classes}"`, `"${habits}"`, `"${noteStr.replace(/"/g, '""')}"` ].join(",");
+      return [
+        day.date, score, day.streak || 0, 
+        possClasses, possTasks, day.possibleCount || 0, 
+        numClasses, numHabits, 
+        `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
+      ].join(",");
     });
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -487,7 +508,12 @@ export default function App() {
   const handleBulkExport = async () => {
     setIsExporting(true);
     let masterData = [];
-    const headers = ["Student Name", "Student Email", "Date", "Overall Score (%)", "Streak", "Possible Items", "Subjects Caught Up", "Habits Completed", "Notes/Comments"];
+    const headers = [
+      "Student Name", "Student Email", "Date", "Daily Score (%)", "Streak", 
+      "Possible Classes", "Possible Tasks", "Total Possible Items", 
+      "Number of Classes Checked", "Number of Tasks Checked", 
+      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
+    ];
     masterData.push(headers.join(","));
 
     try {
@@ -495,9 +521,21 @@ export default function App() {
         const hSnap = await getDocs(collection(db, 'users', student.id, 'history'));
         hSnap.forEach(d => {
           const day = d.data();
-          const score = Math.round(((day.caughtUpSubjects?.length || 0) + (day.completedHabits?.length || 0)) / (day.possibleCount || 1) * 100);
+          const numClasses = day.caughtUpSubjects?.length || 0;
+          const numHabits = day.completedHabits?.length || 0;
+          const score = Math.round((numClasses + numHabits) / (day.possibleCount || 1) * 100);
+          const possClasses = day.possibleClassesCount !== undefined ? day.possibleClassesCount : "N/A";
+          const possTasks = day.possibleHabitsCount !== undefined ? day.possibleHabitsCount : "N/A";
+          const classesList = (day.caughtUpSubjects || []).join("; ");
+          const habitsList = (day.completedHabits || []).join("; ");
           const noteStr = (day.notes || []).map(n => `[${n.author}]: ${n.text}`).join(" | ");
-          const row = [ student.name, student.email || "N/A", day.date, score, day.streak || 0, day.possibleCount || 0, `"${(day.caughtUpSubjects || []).join("; ")}"`, `"${(day.completedHabits || []).join("; ")}"`, `"${noteStr.replace(/"/g, '""')}"` ];
+          
+          const row = [
+            student.name, student.email || "N/A", day.date, score, day.streak || 0, 
+            possClasses, possTasks, day.possibleCount || 0, 
+            numClasses, numHabits, 
+            `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
+          ];
           masterData.push(row.join(","));
         });
       }
