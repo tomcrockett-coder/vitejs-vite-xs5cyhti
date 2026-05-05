@@ -727,7 +727,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-5 font-sans text-gray-800 flex flex-col items-center transition-colors duration-500" style={{ background: `linear-gradient(to top, ${currentTheme.hex}10 0%, #f8fafc 40%, #ffffff 100%)` }}>
+    <div className="min-h-screen p-3 md:p-4 font-sans text-gray-800 flex flex-col items-center transition-colors duration-500" style={{ background: `linear-gradient(to top, ${currentTheme.hex}10 0%, #f8fafc 40%, #ffffff 100%)` }}>
       
       <style>
         {`
@@ -747,21 +747,21 @@ export default function App() {
       </style>
 
       {/* Top Navigation Bar */}
-      <div className={`w-full max-w-6xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-4 md:px-6 py-3 md:py-2 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-3 transition-colors duration-500`}>
+      <div className={`w-full max-w-6xl bg-slate-200/80 backdrop-blur-md rounded-2xl md:rounded-full px-4 md:px-6 py-2.5 md:py-2 shadow-sm border-[3px] ${currentTheme.border} mb-2 flex flex-col md:flex-row justify-between items-center gap-3 transition-colors duration-500`}>
         <RVALogo large={false} theme={currentTheme} />
         
         <div className="flex items-center gap-2 flex-wrap md:flex-nowrap justify-center">
           {isStaff && selectedStudentId && !showAdminPanel && (
             <button 
               onClick={() => { setViewAsStudent(!viewAsStudent); setShowSettings(false); }} 
-              className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full transition-all border-2 border-black whitespace-nowrap ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+              className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all border-2 border-black whitespace-nowrap ${viewAsStudent ? 'bg-amber-100 text-amber-800' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
               {viewAsStudent ? <EyeOff size={14} /> : <Eye size={14} />} 
               <span className="hidden lg:inline">{viewAsStudent ? 'Exit View' : 'Student View'}</span>
             </button>
           )}
           
           {isStaff && !showAdminPanel && (
-            <select className={`p-2 bg-white border-2 border-black rounded-lg text-xs font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors max-w-[140px] md:max-w-[180px] truncate shrink`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
+            <select className={`p-1.5 bg-white border-2 border-black rounded-lg text-xs font-bold text-gray-700 outline-none focus:${currentTheme.border} transition-colors max-w-[140px] md:max-w-[180px] truncate shrink`} value={selectedStudentId || ''} onChange={(e) => { setSelectedStudentId(e.target.value); setViewAsStudent(false); setShowSettings(false); }}>
               <option value="">-- Select Student --</option>
               {studentsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -770,7 +770,7 @@ export default function App() {
           {userRole === 'admin' && (
             <button 
               onClick={() => { setShowAdminPanel(!showAdminPanel); setSelectedStudentId(null); setShowSettings(false); }} 
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-full border-2 border-black transition-colors font-bold text-xs whitespace-nowrap ${showAdminPanel ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`} 
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-black transition-colors font-bold text-xs whitespace-nowrap ${showAdminPanel ? 'bg-blue-100 text-blue-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`} 
               title="Admin Settings">
               <Shield size={14} />
               <span className="hidden lg:inline">{showAdminPanel ? 'Exit Admin' : 'Admin'}</span>
@@ -778,22 +778,22 @@ export default function App() {
           )}
 
           {uploadTargetId && (
-            <div className="relative w-8 h-8 rounded-full border-2 border-black overflow-hidden group cursor-pointer shrink-0 shadow-sm bg-gray-200 flex items-center justify-center">
+            <div className="relative w-7 h-7 rounded-full border-2 border-black overflow-hidden group cursor-pointer shrink-0 shadow-sm bg-gray-200 flex items-center justify-center">
               {displayPhoto ? (
                 <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
               ) : (
-                <User size={18} className="text-gray-400" />
+                <User size={16} className="text-gray-400" />
               )}
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera size={12} className="text-white" />
+                <Camera size={10} className="text-white" />
               </div>
               <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handlePhotoUpload} />
             </div>
           )}
 
           <div className="relative flex items-center">
-            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-2 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors shrink-0" title="Color Theme">
-              <Palette size={16} className="text-gray-700" />
+            <button onClick={() => setShowThemeMenu(!showThemeMenu)} className="p-1.5 rounded-full bg-white border-2 border-black hover:bg-gray-50 transition-colors shrink-0" title="Color Theme">
+              <Palette size={14} className="text-gray-700" />
             </button>
             {showThemeMenu && (
               <div className="absolute right-0 top-full mt-2 p-2 bg-white border-2 border-black rounded-xl shadow-xl flex gap-2 z-50 animate-in fade-in zoom-in-95 duration-200">
@@ -809,7 +809,7 @@ export default function App() {
             )}
           </div>
 
-          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-2 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
+          <button onClick={() => auth.signOut()} className="text-gray-500 hover:text-red-600 font-bold p-1.5 rounded-full bg-white border-2 border-black hover:bg-red-50 transition-colors shrink-0">
             <LogOut size={16} />
           </button>
         </div>
@@ -817,7 +817,7 @@ export default function App() {
 
       {/* Settings Link */}
       {isStaff && selectedStudentId && !showAdminPanel && !viewAsStudent && (
-        <div className="w-full max-w-6xl text-right mb-3 px-2 flex justify-between items-center">
+        <div className="w-full max-w-6xl text-right mb-2 px-2 flex justify-between items-center">
           <div className="text-[10px] font-bold text-gray-500 flex items-center gap-1.5">
             <UserPlus size={12} /> Pre-load students via Admin
           </div>
@@ -851,7 +851,7 @@ export default function App() {
                 <div className="space-y-2">
                   <input type="text" placeholder="Student First & Last Name..." className={`w-full p-2 border-2 border-black rounded-lg font-bold text-sm text-gray-700 outline-none focus:${currentTheme.border}`} value={preloadName} onChange={e => setPreloadName(e.target.value)} />
                   <input type="email" placeholder="Student Google Email..." className={`w-full p-2 border-2 border-black rounded-lg font-bold text-sm text-gray-700 outline-none focus:${currentTheme.border}`} value={preloadEmail} onChange={e => setPreloadEmail(e.target.value)} />
-                  <button onClick={handlePreloadStudent} className={`w-full py-2.5 mt-1 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold text-sm rounded-lg border-2 border-black transition-colors flex justify-center items-center gap-2`}>
+                  <button onClick={handlePreloadStudent} className={`w-full py-2 mt-1 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold text-sm rounded-lg border-2 border-black transition-colors flex justify-center items-center gap-2`}>
                     <UserPlus size={14} /> Pre-load Profile
                   </button>
                 </div>
@@ -867,7 +867,7 @@ export default function App() {
                     <option value="teacher">Teacher (Staff)</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <button onClick={handleAddStaff} className={`w-full py-2.5 mt-1 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold text-sm rounded-lg border-2 border-black transition-colors`}>Authorize Staff</button>
+                  <button onClick={handleAddStaff} className={`w-full py-2 mt-1 ${currentTheme.primary} ${currentTheme.hover} text-white font-bold text-sm rounded-lg border-2 border-black transition-colors`}>Authorize Staff</button>
                 </div>
               </div>
             </div>
@@ -941,7 +941,7 @@ export default function App() {
 
           </div>
 
-          <button onClick={() => setShowAdminPanel(false)} className={`px-6 py-3 bg-white ${currentTheme.text} font-bold text-sm rounded-xl hover:bg-gray-100 transition-all shadow-sm border-2 border-black inline-flex items-center gap-2`}>
+          <button onClick={() => setShowAdminPanel(false)} className={`px-6 py-2.5 bg-white ${currentTheme.text} font-bold text-sm rounded-xl hover:bg-gray-100 transition-all shadow-sm border-2 border-black inline-flex items-center gap-2`}>
             Return to Dashboard
           </button>
         </div>
@@ -1005,14 +1005,14 @@ export default function App() {
             </div>
 
             <div className="pt-4 border-t border-gray-100 flex flex-col md:flex-row gap-3">
-              <button onClick={saveSettings} className={`flex-1 py-3 ${currentTheme.primary} text-white font-black text-sm rounded-xl ${currentTheme.hover} transition-all shadow-sm border-2 border-black border-b-[4px] active:border-b-2 active:translate-y-[2px]`}>Save Settings</button>
-              <button onClick={() => setShowSettings(false)} className="px-6 py-3 bg-white border-2 border-black text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
+              <button onClick={saveSettings} className={`flex-1 py-2.5 ${currentTheme.primary} text-white font-black text-sm rounded-xl ${currentTheme.hover} transition-all shadow-sm border-2 border-black border-b-[4px] active:border-b-2 active:translate-y-[2px]`}>Save Settings</button>
+              <button onClick={() => setShowSettings(false)} className="px-6 py-2.5 bg-white border-2 border-black text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition-all shadow-sm">Cancel</button>
             </div>
             
             {/* Developer Sandbox for Fake Data */}
-            <div className="pt-5 mt-2 border-t-2 border-dashed border-gray-200">
-               <h3 className="font-black text-base text-gray-800 flex items-center gap-2 mb-1.5"><AlertTriangle size={16} className="text-orange-500"/> Developer Data Sandbox</h3>
-               <p className="text-xs text-gray-500 font-bold mb-3">Use these tools to instantly populate this specific student's profile with fake data to test out the visual Trends & Analytics charts.</p>
+            <div className="pt-4 mt-2 border-t-2 border-dashed border-gray-200">
+               <h3 className="font-black text-sm text-gray-800 flex items-center gap-2 mb-1.5"><AlertTriangle size={16} className="text-orange-500"/> Developer Data Sandbox</h3>
+               <p className="text-[10px] text-gray-500 font-bold mb-3">Use these tools to instantly populate this specific student's profile with fake data to test out the visual Trends & Analytics charts.</p>
                <div className="flex flex-col sm:flex-row gap-2">
                  <button onClick={handleGenerateFakeData} disabled={isGeneratingFakeData} className="flex-1 py-2 bg-blue-50 text-blue-700 font-black text-xs rounded-lg hover:bg-blue-100 transition-all border border-blue-200 flex justify-center items-center gap-1.5 disabled:opacity-50">
                     {isGeneratingFakeData ? <Loader2 size={14} className="animate-spin"/> : <BarChart3 size={14}/>} Generate 45 Days of Test Data
@@ -1032,76 +1032,80 @@ export default function App() {
           <p className="text-white/80 text-sm">Select a student from the menu above to start your session.</p>
         </div>
       ) : (
-        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-5 mt-1">
-          <div className="lg:col-span-2 space-y-4 md:space-y-5">
+        <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-4 mt-1">
+          <div className="lg:col-span-2 space-y-4">
             
-            {/* Daily Submission Panel */}
+            {/* Daily Submission Panel - COMPRESSED */}
             {!isEffectivelyStaff && (
-              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[24px] p-5 md:p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
                 {isSubmittedToday && !isEditingToday ? (
-                  <div className="text-center py-6">
-                    <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-emerald-100"><CheckCircle2 size={24} className="text-[#2D6A4F]" /></div>
-                    <h2 className="text-xl font-black text-gray-900 mb-1">Check-in Complete!</h2>
-                    <p className="text-gray-500 mb-5 text-sm font-bold">You've logged your progress for today.</p>
-                    <button onClick={() => setIsEditingToday(true)} className="px-5 py-2.5 bg-white border-2 border-black text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-50 shadow-sm"><Edit3 size={16} className="inline mr-2" /> Edit Entry</button>
+                  <div className="text-center py-5">
+                    <div className="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-emerald-100"><CheckCircle2 size={20} className="text-[#2D6A4F]" /></div>
+                    <h2 className="text-lg font-black text-gray-900 mb-1">Check-in Complete!</h2>
+                    <p className="text-gray-500 mb-4 text-xs font-bold">You've logged your progress for today.</p>
+                    <button onClick={() => setIsEditingToday(true)} className="px-4 py-2 bg-white border-2 border-black text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-50 shadow-sm"><Edit3 size={14} className="inline mr-1.5" /> Edit Entry</button>
                   </div>
                 ) : (
-                  <div className="space-y-5 animate-in fade-in duration-300">
-                    <h2 className={`text-lg font-black flex items-center gap-2 ${currentTheme.text}`}><Activity size={20} /> Today's Focus</h2>
+                  <div className="space-y-3 animate-in fade-in duration-300">
+                    <h2 className={`text-base font-black flex items-center gap-1.5 ${currentTheme.text} mb-1`}><Activity size={18} /> Today's Focus</h2>
                     
-                    <div className="bg-white border-2 border-gray-200 p-4 rounded-[20px] shadow-sm">
-                      <p className="font-bold text-gray-800 text-sm mb-3">Select classes with <strong className={currentTheme.text}>{goalText}</strong>:</p>
+                    {/* Classes Section */}
+                    <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
+                      <p className="font-bold text-gray-800 text-xs mb-2">Select classes with <strong className={currentTheme.text}>{goalText}</strong>:</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {activeSubjects.map(sub => (
                           <button 
                             key={sub} 
                             onClick={() => { const current = todayData.caughtUpSubjects.includes(sub); setTodayData({...todayData, caughtUpSubjects: current ? todayData.caughtUpSubjects.filter(s => s !== sub) : [...todayData.caughtUpSubjects, sub]}); current ? playUnclick() : playClick(); setIsNoneSubjects(false); }} 
-                            className={`p-2.5 md:p-3 rounded-xl border-2 font-bold text-xs transition-all text-left flex items-center gap-2.5 border-black ${todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-                            {todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? <CheckCircle2 size={16} className="shrink-0" /> : <Circle size={16} className="text-gray-400 shrink-0" />} 
-                            <span className="leading-tight">{sub}</span>
+                            className={`px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left flex items-center gap-2 border-black ${todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                            {todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                            <span className="truncate">{sub}</span>
                           </button>
                         ))}
                       </div>
                       <button 
                         onClick={() => { const next = !isNoneSubjects; setIsNoneSubjects(next); setTodayData({...todayData, caughtUpSubjects: []}); next ? playClick() : playUnclick(); }} 
-                        className={`mt-3 w-full p-3 rounded-xl border-2 font-bold text-xs transition-all border-black text-left flex items-center gap-2.5 ${isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
-                        {isNoneSubjects ? <CheckCircle2 size={16} className="shrink-0" /> : <Circle size={16} className="text-gray-400 shrink-0" />} 
-                        <span className="leading-tight">I am not fully caught up in any classes yet.</span>
+                        className={`mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left flex items-center gap-2 ${isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        {isNoneSubjects ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                        <span className="truncate">I am not fully caught up in any classes yet.</span>
                       </button>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-200 p-4 rounded-[20px] shadow-sm">
-                      <p className="font-bold text-gray-800 text-sm mb-3">Target Habits:</p>
+                    {/* Habits Section */}
+                    <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
+                      <p className="font-bold text-gray-800 text-xs mb-2">Target Habits:</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {activeHabits.map(hab => (
                           <button 
                             key={hab} 
                             onClick={() => { const current = todayData.completedHabits.includes(hab); setTodayData({...todayData, completedHabits: current ? todayData.completedHabits.filter(h => h !== hab) : [...todayData.completedHabits, hab]}); current ? playUnclick() : playClick(); setIsNoneHabits(false); }} 
-                            className={`p-2.5 md:p-3 rounded-xl border-2 font-bold text-xs transition-all text-left flex items-center gap-2.5 border-black ${todayData.completedHabits.includes(hab) && !isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-                            {todayData.completedHabits.includes(hab) && !isNoneHabits ? <CheckCircle2 size={16} className="shrink-0" /> : <Circle size={16} className="text-gray-400 shrink-0" />} 
-                            <span className="leading-tight">{hab}</span>
+                            className={`px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left flex items-center gap-2 border-black ${todayData.completedHabits.includes(hab) && !isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                            {todayData.completedHabits.includes(hab) && !isNoneHabits ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                            <span className="line-clamp-2">{hab}</span>
                           </button>
                         ))}
                       </div>
                       <button 
                         onClick={() => { const next = !isNoneHabits; setIsNoneHabits(next); setTodayData({...todayData, completedHabits: []}); next ? playClick() : playUnclick(); }} 
-                        className={`mt-3 w-full p-3 rounded-xl border-2 font-bold text-xs transition-all border-black text-left flex items-center gap-2.5 ${isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
-                        {isNoneHabits ? <CheckCircle2 size={16} className="shrink-0" /> : <Circle size={16} className="text-gray-400 shrink-0" />} 
-                        <span className="leading-tight">I did not meet these habit goals today.</span>
+                        className={`mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left flex items-center gap-2 ${isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        {isNoneHabits ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                        <span className="truncate">I did not meet these habit goals today.</span>
                       </button>
                     </div>
 
-                    <div className="bg-white border-2 border-gray-200 p-4 rounded-[20px] shadow-sm">
-                      <p className="font-bold text-gray-800 text-sm mb-2">Do you want to add a comment for your instructor?</p>
+                    {/* Comment Section */}
+                    <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
+                      <p className="font-bold text-gray-800 text-xs mb-1.5">Do you want to add a comment for your instructor?</p>
                       <textarea 
-                        className={`w-full p-3 rounded-xl border-2 border-black font-bold text-sm text-gray-700 outline-none focus:${currentTheme.border} resize-none h-16`}
+                        className={`w-full p-2 rounded-lg border-2 border-black font-bold text-[11px] text-gray-700 outline-none focus:${currentTheme.border} resize-none`}
+                        rows={2}
                         placeholder="Type your message here..."
                         value={todayData.newNote}
                         onChange={(e) => setTodayData({...todayData, newNote: e.target.value})}
                       />
                     </div>
 
-                    <button onClick={submitToday} className={`w-full py-3 ${currentTheme.primary} ${currentTheme.hover} text-white font-black text-base shadow-sm border-2 border-black border-b-[4px] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2 rounded-xl`}><Send size={18}/> Save Daily Progress</button>
+                    <button onClick={submitToday} className={`w-full py-2.5 ${currentTheme.primary} ${currentTheme.hover} text-white font-black text-sm shadow-sm border-2 border-black border-b-[4px] active:border-b-2 active:translate-y-[2px] transition-all flex items-center justify-center gap-2 rounded-xl`}><Send size={16}/> Save Daily Progress</button>
                   </div>
                 )}
               </div>
@@ -1109,30 +1113,30 @@ export default function App() {
 
             {/* Trends & Analytics Panel */}
             {trendsData && trendsData.totalDays > 0 && (
-              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[24px] p-5 md:p-6 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <BarChart3 size={20} className={currentTheme.text} />
-                  <h2 className="text-lg font-black text-gray-900 tracking-tight">Trends & Analytics</h2>
+              <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 size={18} className={currentTheme.text} />
+                  <h2 className="text-base font-black text-gray-900 tracking-tight">Trends & Analytics</h2>
                 </div>
                 
-                <div className="bg-white p-4 md:p-5 rounded-[20px] border-2 border-black shadow-sm mb-4 relative">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-gray-800 flex items-center gap-1.5 text-xs uppercase tracking-widest">
-                      <TrendingUp size={14} className="text-blue-600" /> Score History
+                <div className="bg-white p-3 rounded-[16px] border-2 border-black shadow-sm mb-3 relative">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-1 text-[10px] uppercase tracking-widest">
+                      <TrendingUp size={12} className="text-blue-600" /> Score History
                     </h3>
-                    <div className="flex gap-3 text-[9px] font-bold uppercase tracking-widest bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                      <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 bg-blue-500 rounded-sm"></div> Overall</div>
-                      <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 bg-gray-300 rounded-sm"></div> Daily</div>
+                    <div className="flex gap-2.5 text-[8px] font-bold uppercase tracking-widest bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                      <div className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-sm"></div> Overall</div>
+                      <div className="flex items-center gap-1"><div className="w-2 h-2 bg-gray-300 rounded-sm"></div> Daily</div>
                     </div>
                   </div>
 
-                  <div className="h-32 flex items-end gap-1.5 md:gap-3 border-b-2 border-black pb-0 px-1 relative">
+                  <div className="h-28 flex items-end gap-1 md:gap-2 border-b-2 border-black pb-0 px-1 relative">
                     {/* Background Grid Lines */}
                     <div className="absolute top-0 left-0 w-full border-t-2 border-dashed border-gray-200 -z-10 flex items-start">
-                      <span className="text-[9px] text-gray-400 font-bold -mt-3.5 ml-1">100%</span>
+                      <span className="text-[8px] text-gray-400 font-bold -mt-3.5 ml-1">100%</span>
                     </div>
                     <div className="absolute top-1/2 left-0 w-full border-t border-dashed border-gray-200 -z-10 flex items-start">
-                      <span className="text-[9px] text-gray-400 font-bold -mt-3.5 ml-1">50%</span>
+                      <span className="text-[8px] text-gray-400 font-bold -mt-3.5 ml-1">50%</span>
                     </div>
                     
                     {/* Overall Score Trend Line Overlay */}
@@ -1174,42 +1178,42 @@ export default function App() {
                       return (
                         <div key={day.id + index} className="flex-1 flex flex-col items-center group relative h-full justify-end z-0">
                           <div 
-                            className={`w-full max-w-[32px] rounded-t-sm transition-opacity group-hover:opacity-80 border-2 border-b-0 border-black shadow-[inset_0_-3px_0_rgba(0,0,0,0.1)] opacity-40 animate-grow-up ${day.dailyScore >= 85 ? 'bg-[#2D6A4F]' : day.dailyScore >= 70 ? 'bg-amber-400' : 'bg-red-400'}`} 
+                            className={`w-full max-w-[28px] rounded-t-[4px] transition-opacity group-hover:opacity-80 border-2 border-b-0 border-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.1)] opacity-40 animate-grow-up ${day.dailyScore >= 85 ? 'bg-[#2D6A4F]' : day.dailyScore >= 70 ? 'bg-amber-400' : 'bg-red-400'}`} 
                             style={{ height: `${Math.max(Math.min(day.dailyScore, 100), 5)}%`, animationDelay: `${index * 0.15}s` }}
                           ></div>
-                          <span className="text-[8px] font-bold text-gray-500 mt-1.5 rotate-45 origin-top-left absolute -bottom-6 whitespace-nowrap">
+                          <span className="text-[7px] font-bold text-gray-500 mt-1 rotate-45 origin-top-left absolute -bottom-5 whitespace-nowrap">
                             {day.date.substring(5).replace('-', '/')}
                           </span>
                           
-                          <div className="absolute bottom-full mb-1.5 bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none shadow-xl border border-gray-700">
-                            <div className="text-center text-sm">{day.dailyScore}% Daily</div>
+                          <div className="absolute bottom-full mb-1 bg-black text-white text-[9px] font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none shadow-xl border border-gray-700">
+                            <div className="text-center text-xs">{day.dailyScore}% Daily</div>
                             <div className="text-center text-blue-300">{day.cumulativeScore}% Overall</div>
-                            <div className="text-[8px] font-normal text-gray-400 mt-0.5">{day.date}</div>
+                            <div className="text-[7px] font-normal text-gray-400 mt-0.5">{day.date}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="h-6 w-full"></div> 
+                  <div className="h-5 w-full"></div> 
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-[20px] border-2 border-black shadow-sm">
-                     <h3 className="font-bold text-gray-800 mb-2.5 text-xs uppercase tracking-widest border-b border-gray-100 pb-1.5">Most Frequent Classes</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-white p-3 rounded-[16px] border-2 border-black shadow-sm">
+                     <h3 className="font-bold text-gray-800 mb-2 text-[10px] uppercase tracking-widest border-b border-gray-100 pb-1">Frequent Classes</h3>
                      {trendsData.topClasses.length === 0 ? (
-                        <p className="text-xs text-gray-500 font-bold italic">No data yet.</p>
+                        <p className="text-[10px] text-gray-500 font-bold italic">No data yet.</p>
                      ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           {trendsData.topClasses.map(([sub, count]) => (
-                            <div key={sub} className="flex justify-between items-center group hover:bg-gray-50 p-1.5 -mx-1.5 rounded-lg transition-colors">
-                              <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                                <CheckCircle2 size={14} className="text-[#2D6A4F] opacity-50" /> {sub}
+                            <div key={sub} className="flex justify-between items-center group hover:bg-gray-50 p-1 -mx-1 rounded-md transition-colors">
+                              <span className="text-[10px] font-bold text-gray-700 flex items-center gap-1.5 truncate pr-2">
+                                <CheckCircle2 size={12} className="text-[#2D6A4F] opacity-50 shrink-0" /> <span className="truncate">{sub}</span>
                               </span>
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <div className="w-10 h-1.5 bg-gray-200 rounded-full overflow-hidden hidden md:block">
                                   <div className="h-full bg-[#2D6A4F] animate-in slide-in-from-left duration-1000" style={{ width: `${(count / trendsData.totalDays) * 100}%` }}></div>
                                 </div>
-                                <span className="text-[10px] font-black bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 min-w-[36px] text-center">
+                                <span className="text-[9px] font-black bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 min-w-[28px] text-center">
                                   {count}/{trendsData.totalDays}
                                 </span>
                               </div>
@@ -1219,22 +1223,22 @@ export default function App() {
                      )}
                   </div>
                   
-                  <div className="bg-white p-4 rounded-[20px] border-2 border-black shadow-sm">
-                     <h3 className="font-bold text-gray-800 mb-2.5 text-xs uppercase tracking-widest border-b border-gray-100 pb-1.5">Top Habits Met</h3>
+                  <div className="bg-white p-3 rounded-[16px] border-2 border-black shadow-sm">
+                     <h3 className="font-bold text-gray-800 mb-2 text-[10px] uppercase tracking-widest border-b border-gray-100 pb-1">Top Habits Met</h3>
                      {trendsData.topHabits.length === 0 ? (
-                        <p className="text-xs text-gray-500 font-bold italic">No data yet.</p>
+                        <p className="text-[10px] text-gray-500 font-bold italic">No data yet.</p>
                      ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           {trendsData.topHabits.map(([hab, count]) => (
-                            <div key={hab} className="flex justify-between items-center group hover:bg-gray-50 p-1.5 -mx-1.5 rounded-lg transition-colors">
-                              <span className="text-xs font-bold text-gray-700 truncate mr-2 flex items-center gap-1.5" title={hab}>
-                                <Sparkles size={14} className="text-blue-500 opacity-50 shrink-0" /> {hab}
+                            <div key={hab} className="flex justify-between items-center group hover:bg-gray-50 p-1 -mx-1 rounded-md transition-colors">
+                              <span className="text-[10px] font-bold text-gray-700 truncate pr-2 flex items-center gap-1.5" title={hab}>
+                                <Sparkles size={12} className="text-blue-500 opacity-50 shrink-0" /> <span className="truncate">{hab}</span>
                               </span>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden hidden sm:block">
+                                <div className="w-10 h-1.5 bg-gray-200 rounded-full overflow-hidden hidden md:block">
                                   <div className="h-full bg-blue-500 animate-in slide-in-from-left duration-1000" style={{ width: `${(count / trendsData.totalDays) * 100}%` }}></div>
                                 </div>
-                                <span className="text-[10px] font-black bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 min-w-[36px] text-center">
+                                <span className="text-[9px] font-black bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 min-w-[28px] text-center">
                                   {count}/{trendsData.totalDays}
                                 </span>
                               </div>
@@ -1248,47 +1252,47 @@ export default function App() {
             )}
 
             {/* History Panel */}
-            <div className="space-y-3 pt-1">
+            <div className="space-y-2 pt-1">
               <div className="flex justify-between items-center px-2">
-                <h2 className="text-lg font-black flex items-center gap-2 text-gray-800"><Calendar size={18} /> Submission History</h2>
+                <h2 className="text-base font-black flex items-center gap-1.5 text-gray-800"><Calendar size={16} /> Submission History</h2>
                 {history.length > 0 && (
                   <button 
                     onClick={() => exportToCSV(history, `Equip_Data_${studentsList.find(s=>s.id===selectedStudentId)?.name || 'Student'}_${new Date().toISOString().split('T')[0]}.csv`)} 
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
-                    <Download size={12} /> Export Data
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-white border-2 border-black rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                    <Download size={10} /> Export Data
                   </button>
                 )}
               </div>
               
               {history.length === 0 ? (
-                <div className="text-center py-5 px-4 border-2 border-dashed border-gray-300 rounded-[20px] bg-slate-200/50">
-                  <p className="text-xs text-gray-500 font-bold">No entries found for this student.</p>
+                <div className="text-center py-4 px-4 border-2 border-dashed border-gray-300 rounded-[16px] bg-slate-200/50">
+                  <p className="text-[10px] text-gray-500 font-bold">No entries found for this student.</p>
                 </div>
               ) : (
                 history.map(day => (
-                  <div key={day.id} className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
-                    <div className="flex justify-between mb-2.5">
-                      <div className="font-black text-base text-gray-900">{day.date}</div>
-                      <div className={`px-2.5 py-0.5 rounded-full text-white font-black text-[10px] border border-black/20 ${getHealthBg(Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100))}`}>
+                  <div key={day.id} className={`bg-slate-200/80 backdrop-blur-md rounded-[16px] p-3 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+                    <div className="flex justify-between mb-2">
+                      <div className="font-black text-sm text-gray-900">{day.date}</div>
+                      <div className={`px-2 py-0.5 rounded-full text-white font-black text-[9px] border border-black/20 ${getHealthBg(Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100))}`}>
                         {Math.round(((day.caughtUpSubjects?.length||0) + (day.completedHabits?.length||0)) / (day.possibleCount||1) * 100)}%
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 mb-2.5">
-                      {day.caughtUpSubjects?.map(s => <span key={s} className="px-2 py-0.5 bg-white text-[#2D6A4F] rounded text-[10px] font-bold border border-black">✓ {s}</span>)}
-                      {day.completedHabits?.map(h => <span key={h} className="px-2 py-0.5 bg-white text-[#2D6A4F] rounded text-[10px] font-bold border border-black">✓ {h}</span>)}
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {day.caughtUpSubjects?.map(s => <span key={s} className="px-1.5 py-0.5 bg-white text-[#2D6A4F] rounded text-[9px] font-bold border border-black">✓ {s}</span>)}
+                      {day.completedHabits?.map(h => <span key={h} className="px-1.5 py-0.5 bg-white text-[#2D6A4F] rounded text-[9px] font-bold border border-black">✓ {h}</span>)}
                     </div>
                     
-                    <div className="bg-white p-3 rounded-xl space-y-2.5 shadow-sm border border-black">
+                    <div className="bg-white p-2.5 rounded-xl space-y-2 shadow-sm border border-black">
                       {day.notes?.map((n, i) => (
                         <div key={i} className={`flex flex-col ${n.author === 'Mr. Crockett' ? 'items-end' : 'items-start'}`}>
-                          <div className={`p-2 rounded-lg max-w-[85%] text-xs font-bold border border-black ${n.author === 'Mr. Crockett' ? `${currentTheme.primary} text-white rounded-br-none` : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>{n.text}</div>
-                          <span className="text-[9px] text-gray-500 mt-1 uppercase tracking-widest font-bold">{n.author} • {n.time}</span>
+                          <div className={`p-1.5 rounded-lg max-w-[85%] text-[11px] font-bold border border-black ${n.author === 'Mr. Crockett' ? `${currentTheme.primary} text-white rounded-br-none` : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>{n.text}</div>
+                          <span className="text-[8px] text-gray-500 mt-0.5 uppercase tracking-widest font-bold">{n.author} • {n.time}</span>
                         </div>
                       ))}
                       {isEffectivelyStaff && (
-                        <div className="flex gap-2 pt-2 mt-2 border-t border-gray-100">
-                          <input type="text" placeholder="Reply..." className={`flex-1 p-1.5 text-xs rounded-lg border border-black outline-none focus:${currentTheme.border}`} value={replyTexts[day.id] || ''} onChange={e => setReplyTexts({...replyTexts, [day.id]: e.target.value})} onKeyDown={e => e.key === 'Enter' && submitReply(day.id)} />
-                          <button onClick={() => submitReply(day.id)} className={`p-1.5 px-2.5 ${currentTheme.primary} border border-black text-white rounded-lg ${currentTheme.hover} transition-colors`}><Send size={14} /></button>
+                        <div className="flex gap-1.5 pt-1.5 mt-1.5 border-t border-gray-100">
+                          <input type="text" placeholder="Reply..." className={`flex-1 p-1.5 text-[11px] rounded-lg border border-black outline-none focus:${currentTheme.border}`} value={replyTexts[day.id] || ''} onChange={e => setReplyTexts({...replyTexts, [day.id]: e.target.value})} onKeyDown={e => e.key === 'Enter' && submitReply(day.id)} />
+                          <button onClick={() => submitReply(day.id)} className={`p-1 px-2 ${currentTheme.primary} border border-black text-white rounded-lg ${currentTheme.hover} transition-colors`}><Send size={12} /></button>
                         </div>
                       )}
                     </div>
@@ -1299,63 +1303,63 @@ export default function App() {
 
           </div>
 
-          <div className="space-y-4 md:space-y-5">
+          <div className="space-y-4">
             
             {/* COMPACT Health Score Panel (Sidebar) */}
-            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[24px] p-5 shadow-sm border-[3px] ${currentTheme.border} flex flex-col items-center gap-4 transition-colors duration-500`}>
+            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} flex flex-col items-center gap-3 transition-colors duration-500`}>
               <div className="text-center">
-                <h1 className="text-lg font-black text-gray-900 tracking-tight">Academic Health</h1>
-                <div className="flex items-center justify-center gap-1.5 text-orange-500 mt-0.5 font-black uppercase text-[9px] tracking-widest">
+                <h1 className="text-base font-black text-gray-900 tracking-tight">Academic Health</h1>
+                <div className="flex items-center justify-center gap-1 text-orange-500 mt-0.5 font-black uppercase text-[8px] tracking-widest">
                   <Flame size={10} fill="currentColor" /> {currentStreak} Day Streak
                 </div>
               </div>
               <div className="flex w-full justify-around items-center">
                 <div className="flex flex-col items-center">
-                  <div className="relative flex items-center justify-center w-14 h-14 font-black text-base">
+                  <div className="relative flex items-center justify-center w-12 h-12 font-black text-sm">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="8" />
                       <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="8" strokeDasharray="283" strokeDashoffset={283 * (1 - todayScore/100)} className={`${getHealthColor(todayScore)} transition-all duration-1000`} strokeLinecap="round" />
                     </svg>
                     <div className="absolute">{todayScore}</div>
                   </div>
-                  <span className="text-[8px] font-black uppercase text-gray-500 mt-1.5 tracking-widest">Today</span>
+                  <span className="text-[7px] font-black uppercase text-gray-500 mt-1 tracking-widest">Today</span>
                 </div>
                 <div className="flex flex-col items-center relative">
-                  <div className="relative flex items-center justify-center w-16 h-16 font-black text-xl">
+                  <div className="relative flex items-center justify-center w-16 h-16 font-black text-lg">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                       <circle cx="50" cy="50" r="45" fill="none" stroke="#d1d5db" strokeWidth="10" />
                       <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray="283" strokeDashoffset={283 * (1 - Math.min(healthScore, 100)/100)} className={`${getHealthColor(healthScore)} transition-all duration-1000`} strokeLinecap="round" />
                     </svg>
                     <div className="absolute">{healthScore}</div>
-                    {fireworksActive && <Sparkles size={24} className="absolute text-yellow-500 animate-bounce" />}
+                    {fireworksActive && <Sparkles size={20} className="absolute text-yellow-500 animate-bounce" />}
                   </div>
-                  <span className="text-[8px] font-black uppercase text-gray-500 mt-1.5 tracking-widest">Overall</span>
+                  <span className="text-[7px] font-black uppercase text-gray-500 mt-1 tracking-widest">Overall</span>
                 </div>
               </div>
             </div>
 
             {/* Research Panel Sidebar */}
-            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[24px] p-5 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
-              <h2 className="text-base font-black mb-4 flex items-center gap-2"><Zap className="text-yellow-500" size={18} /> What Works for Me?</h2>
+            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
+              <h2 className="text-sm font-black mb-3 flex items-center gap-1.5"><Zap className="text-yellow-500" size={16} /> What Works for Me?</h2>
               {!researchUnlocked ? (
-                <div className="text-center py-8 px-3 border-2 border-dashed border-gray-400 rounded-xl bg-white">
-                  <p className="text-[10px] text-gray-500 font-bold">Reach {startingScore + 10}% Overall Health to unlock your custom "What Works for Me?" panel!</p>
+                <div className="text-center py-6 px-3 border-2 border-dashed border-gray-400 rounded-[16px] bg-white">
+                  <p className="text-[9px] text-gray-500 font-bold leading-tight">Reach {startingScore + 10}% Overall Health to unlock your custom "What Works for Me?" panel!</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {Object.keys(researchData).map(cat => (
-                    <div key={cat} className={`p-3 rounded-[16px] border-2 border-black transition-all ${researchData[cat].approved ? 'bg-emerald-50' : 'bg-white'}`}>
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em]">{cat}</h3>
-                        {isEffectivelyStaff && <button onClick={() => handleApproveResearch(cat)} className={`p-1 rounded-md transition-colors border-2 border-black ${researchData[cat].approved ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-100'}`}><Zap size={12} /></button>}
-                        {!isEffectivelyStaff && researchData[cat].approved && <Sparkles size={12} className="text-[#2D6A4F]" />}
+                    <div key={cat} className={`p-2 rounded-xl border-2 border-black transition-all ${researchData[cat].approved ? 'bg-emerald-50' : 'bg-white'}`}>
+                      <div className="flex justify-between items-center mb-1.5">
+                        <h3 className="text-[7px] font-black text-gray-600 uppercase tracking-[0.2em]">{cat}</h3>
+                        {isEffectivelyStaff && <button onClick={() => handleApproveResearch(cat)} className={`p-0.5 rounded transition-colors border-2 border-black ${researchData[cat].approved ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-100'}`}><Zap size={10} /></button>}
+                        {!isEffectivelyStaff && researchData[cat].approved && <Sparkles size={10} className="text-[#2D6A4F]" />}
                       </div>
                       {cat !== 'extra' ? (
-                        <select className="w-full p-1.5 text-[10px] font-bold rounded-md bg-gray-50 outline-none border-2 border-black text-gray-800" disabled={isEffectivelyStaff || researchData[cat].approved}>
+                        <select className="w-full p-1 text-[9px] font-bold rounded bg-gray-50 outline-none border-2 border-black text-gray-800" disabled={isEffectivelyStaff || researchData[cat].approved}>
                           <option value="">Pending entry...</option>
                         </select>
                       ) : (
-                        <textarea className="w-full p-2 text-[10px] font-bold rounded-md bg-gray-50 outline-none border-2 border-black text-gray-800 h-16" placeholder="Notes..." disabled={isEffectivelyStaff || researchData[cat].approved} />
+                        <textarea className="w-full p-1.5 text-[9px] font-bold rounded bg-gray-50 outline-none border-2 border-black text-gray-800 h-10 resize-none" placeholder="Notes..." disabled={isEffectivelyStaff || researchData[cat].approved} />
                       )}
                     </div>
                   ))}
