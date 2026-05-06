@@ -17,6 +17,82 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- PEAK PERFORMANCE AUDIT CONFIGURATION ---
+// Highest points = Green, Lowest points = Yellow. Middle = Neutral.
+const RESEARCH_QUESTIONS = {
+  location: {
+    title: "Schoolwork Location",
+    options: [
+      { text: "Small room / Study area", points: 10 },
+      { text: "Living room / Kitchen", points: 5 },
+      { text: "Other", points: 0 }
+    ]
+  },
+  seating: {
+    title: "Seating Setup",
+    options: [
+      { text: "Chair at a desk", points: 15 },
+      { text: "Couch or Floor", points: 5 },
+      { text: "Other", points: 0 }
+    ]
+  },
+  physOrg: {
+    title: "Physical Organization",
+    options: [
+      { text: "5 - Great", points: 15 },
+      { text: "4 - Good", points: 10 },
+      { text: "3 - Fair", points: 5 },
+      { text: "Other (Poor)", points: 0 }
+    ]
+  },
+  digOrg: {
+    title: "Digital Organization",
+    options: [
+      { text: "Great", points: 15 },
+      { text: "Good", points: 10 },
+      { text: "Average", points: 5 },
+      { text: "Other (Poor)", points: 0 }
+    ]
+  },
+  noise: {
+    title: "Noise Level",
+    options: [
+      { text: "1 - Silent", points: 10 },
+      { text: "2 - Mostly Quiet", points: 8 },
+      { text: "3 - Moderate", points: 5 },
+      { text: "Other (Loud)", points: 0 }
+    ]
+  },
+  internet: {
+    title: "Internet Speed",
+    options: [
+      { text: "Average / Fast / Very Fast", points: 10 },
+      { text: "Other (Slow)", points: 0 }
+    ]
+  },
+  devices: {
+    title: "Nearby Devices",
+    options: [
+      { text: "None", points: 15 },
+      { text: "Cell Phone Only", points: 10 },
+      { text: "TV or Gaming Nearby", points: 5 },
+      { text: "Other (Multiple)", points: 0 }
+    ]
+  },
+  firstClick: {
+    title: "First Click of the Day",
+    options: [
+      { text: "Class / Buzz / Email", points: 10 },
+      { text: "Other (YouTube, Games, etc.)", points: 0 }
+    ]
+  }
+};
+
+const initialResearchState = Object.keys(RESEARCH_QUESTIONS).reduce((acc, key) => {
+  acc[key] = { value: '', other: '', approved: false };
+  return acc;
+}, {});
+
 // --- ZERO-LAG AUDIO ENGINE ---
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
@@ -124,12 +200,7 @@ export default function App() {
   const [todayData, setTodayData] = useState({ caughtUpSubjects: [], completedHabits: [], newNote: '' });
   const [editingStudentName, setEditingStudentName] = useState('');
   
-  const [researchData, setResearchData] = useState({
-    location: { value: '', other: '', approved: false },
-    distractions: { value: '', other: '', approved: false },
-    stuck: { value: '', other: '', approved: false },
-    extra: { value: '', approved: false }
-  });
+  const [researchData, setResearchData] = useState(initialResearchState);
 
   // Admin User Management State
   const [allowedUsersList, setAllowedUsersList] = useState([]);
@@ -272,7 +343,17 @@ export default function App() {
     });
 
     const unsubResearch = onSnapshot(doc(db, 'users', selectedStudentId, 'research', 'habits'), (docSnap) => {
-      if (docSnap.exists()) setResearchData(docSnap.data());
+      if (docSnap.exists()) {
+         // Merge existing data with the full set of current questions to prevent undefined errors
+         const loadedData = docSnap.data();
+         const mergedData = { ...initialResearchState };
+         Object.keys(mergedData).forEach(key => {
+            if (loadedData[key]) mergedData[key] = loadedData[key];
+         });
+         setResearchData(mergedData);
+      } else {
+         setResearchData(initialResearchState);
+      }
     });
 
     return () => { unsubUser(); unsubHistory(); unsubSettings(); unsubResearch(); };
@@ -296,7 +377,9 @@ export default function App() {
 
   const healthScore = useMemo(() => {
     let bonus = 0;
-    Object.values(researchData).forEach(item => { if (item.approved) bonus += 2; });
+    // Assuming standard 2 point bonus per 'approved' star like before
+    Object.values(researchData).forEach(item => { if (item?.approved) bonus += 2; });
+    
     let calculated = startingScore;
     if (history.length > 0) {
       let totalPossible = 0; let totalEarned = 0;
@@ -320,6 +403,16 @@ export default function App() {
     return Math.round((earned / possible) * 100) + teacherDailyAdjustment;
   }, [todayData, activeSubjects.length, activeHabits.length, isSubmittedToday, isEditingToday, todaysHistory, teacherDailyAdjustment]);
 
+  // Calculate specific Audit Score based on form options (Max 100)
+  const auditScore = useMemo(() => {
+    return Object.keys(RESEARCH_QUESTIONS).reduce((sum, cat) => {
+      const val = researchData[cat]?.value;
+      if (!val) return sum;
+      const opt = RESEARCH_QUESTIONS[cat].options.find(o => o.text === val);
+      return sum + (opt ? opt.points : 0);
+    }, 0);
+  }, [researchData]);
+
   const researchUnlocked = isEffectivelyStaff || (healthScore >= startingScore + 10);
 
   // --- COMPUTE TRENDS DATA ---
@@ -331,7 +424,7 @@ export default function App() {
     let runningEarned = 0;
     let runningPossible = 0;
     let bonus = 0;
-    Object.values(researchData).forEach(item => { if (item.approved) bonus += 2; });
+    Object.values(researchData).forEach(item => { if (item?.approved) bonus += 2; });
     
     const cumulativeHistory = sorted.map(day => {
       const earned = (day.caughtUpSubjects?.length || 0) + (day.completedHabits?.length || 0);
@@ -431,6 +524,33 @@ export default function App() {
     const newData = { ...researchData, [category]: { ...researchData[category], approved: isNowApproved } };
     setResearchData(newData);
     await setDoc(doc(db, 'users', selectedStudentId, 'research', 'habits'), newData);
+  };
+
+  const handleResearchChange = async (category, field, value) => {
+    if (!selectedStudentId) return;
+    const newData = {
+      ...researchData,
+      [category]: { ...researchData[category], [field]: value }
+    };
+    setResearchData(newData);
+    await setDoc(doc(db, 'users', selectedStudentId, 'research', 'habits'), newData, { merge: true });
+  };
+
+  const getResearchColorClass = (category, value) => {
+    if (!value) return "bg-gray-50 border-black text-gray-800";
+    const q = RESEARCH_QUESTIONS[category];
+    if (!q) return "bg-gray-50 border-black text-gray-800";
+
+    const option = q.options.find(o => o.text === value);
+    if (!option) return "bg-gray-50 border-black text-gray-800";
+
+    const maxPoints = Math.max(...q.options.map(o => o.points));
+    const minPoints = Math.min(...q.options.map(o => o.points));
+
+    if (option.points === maxPoints) return "bg-emerald-100 text-[#1B4332] border-[#2D6A4F]";
+    if (option.points === minPoints && minPoints !== maxPoints) return "bg-yellow-100 text-yellow-800 border-yellow-500";
+    
+    return "bg-gray-50 border-black text-gray-800";
   };
 
   const saveSettings = async () => {
@@ -590,7 +710,9 @@ export default function App() {
       "Date", "Daily Score (%)", "Cumulative Overall Score (%)", "Streak", 
       "Possible Classes", "Possible Tasks", "Total Possible Items", 
       "Number of Classes Checked", "Number of Tasks Checked", 
-      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
+      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments",
+      "Audit: Location", "Audit: Seating", "Audit: Phys Org", "Audit: Dig Org", 
+      "Audit: Noise", "Audit: Internet", "Audit: Devices", "Audit: First Click"
     ];
     
     const rows = exportData.map(day => {
@@ -603,11 +725,20 @@ export default function App() {
       const classesList = (day.caughtUpSubjects || []).join("; ");
       const habitsList = (day.completedHabits || []).join("; ");
       const noteStr = (day.notes || []).map(n => `[${n.author}]: ${n.text}`).join(" | ");
+
+      // Grab dynamic audit data for this export row (assuming latest snapshot represents their profile)
+      const auditRow = Object.keys(RESEARCH_QUESTIONS).map(cat => {
+        const rd = researchData[cat];
+        if (!rd || !rd.value) return '"N/A"';
+        return `"${rd.value === 'Other' ? `Other: ${rd.other}` : rd.value}"`;
+      });
+
       return [
         day.date, score, overall, day.streak || 0, 
         possClasses, possTasks, day.possibleCount || 0, 
         numClasses, numHabits, 
-        `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
+        `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`,
+        ...auditRow
       ].join(",");
     });
     
@@ -628,7 +759,9 @@ export default function App() {
       "Student Name", "Student Email", "Date", "Daily Score (%)", "Cumulative Overall Score (%)", "Streak", 
       "Possible Classes", "Possible Tasks", "Total Possible Items", 
       "Number of Classes Checked", "Number of Tasks Checked", 
-      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments"
+      "Subjects Caught Up (List)", "Habits Completed (List)", "Notes/Comments",
+      "Audit: Location", "Audit: Seating", "Audit: Phys Org", "Audit: Dig Org", 
+      "Audit: Noise", "Audit: Internet", "Audit: Devices", "Audit: First Click"
     ];
     masterData.push(headers.join(","));
 
@@ -644,8 +777,17 @@ export default function App() {
            tAdj = sSnap.data().teacherAdjustment || 0;
         }
         let bonus = 0;
+        let auditAnswers = Array(8).fill('"N/A"'); // Default N/A for the 8 questions
+        
         if (rSnap.exists()) {
-           Object.values(rSnap.data()).forEach(item => { if (item?.approved) bonus += 2; });
+           const rData = rSnap.data();
+           Object.values(rData).forEach(item => { if (item?.approved) bonus += 2; });
+           
+           auditAnswers = Object.keys(RESEARCH_QUESTIONS).map(cat => {
+             const rd = rData[cat];
+             if (!rd || !rd.value) return '"N/A"';
+             return `"${rd.value === 'Other' ? `Other: ${rd.other}` : rd.value}"`;
+           });
         }
 
         const studentHistory = [];
@@ -675,7 +817,8 @@ export default function App() {
             student.name, student.email || "N/A", day.date, dailyScore, overallScore, day.streak || 0, 
             possClasses, possTasks, possible, 
             numClasses, numHabits, 
-            `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`
+            `"${classesList}"`, `"${habitsList}"`, `"${noteStr.replace(/"/g, '""')}"`,
+            ...auditAnswers
           ];
           masterData.push(row.join(","));
         });
@@ -744,7 +887,7 @@ export default function App() {
           @keyframes typing { from { width: 0; } to { width: 100%; } }
           .typewriter { overflow: hidden; white-space: nowrap; width: 0; animation: typing 1.5s steps(24, end) forwards; animation-delay: 0.5s; }
           
-          /* Custom Chart Animations - Slowed Down to 1/3 speed */
+          /* Custom Chart Animations */
           @keyframes growUp { from { transform: scaleY(0); } to { transform: scaleY(1); } }
           .animate-grow-up { animation: growUp 3s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform-origin: bottom; }
           
@@ -753,6 +896,12 @@ export default function App() {
           
           @keyframes popIn { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
           .animate-pop-in { opacity: 0; animation: popIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform-origin: center; transform-box: fill-box; }
+
+          /* Slim Scrollbar for Right Panel */
+          .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         `}
       </style>
 
@@ -900,7 +1049,7 @@ export default function App() {
                 {/* Students List */}
                 <div>
                   <h4 className="font-black text-gray-800 mb-2 flex items-center gap-1.5 text-xs"><Users size={14} className="text-gray-400"/> Registered Students</h4>
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                     {studentsList.map(s => (
                       <div key={s.id} className="flex justify-between items-center p-2 border-2 border-black rounded-lg bg-gray-50 hover:bg-white transition-colors">
                         <div>
@@ -924,7 +1073,7 @@ export default function App() {
                 {/* Staff List */}
                 <div>
                   <h4 className="font-black text-gray-800 mb-2 flex items-center gap-1.5 text-xs"><Shield size={14} className="text-gray-400"/> Authorized Staff</h4>
-                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                     {allowedUsersList.filter(u => u.role !== 'student').map(u => (
                       <div key={u.email} className="flex justify-between items-center p-2 border-2 border-black rounded-lg bg-gray-50 hover:bg-white transition-colors">
                         <div>
@@ -1115,8 +1264,7 @@ export default function App() {
                     <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
                       <p className="font-bold text-gray-800 text-xs mb-1.5">Do you want to add a comment for your instructor?</p>
                       <textarea 
-                        className={`w-full p-2 rounded-lg border-2 border-black font-bold text-[11px] text-gray-700 outline-none focus:${currentTheme.border} resize-none`}
-                        rows={2}
+                        className={`w-full p-2 rounded-lg border-2 border-black font-bold text-[11px] text-gray-700 outline-none focus:${currentTheme.border} resize-none h-12`}
                         placeholder="Type your message here..."
                         value={todayData.newNote}
                         onChange={(e) => setTodayData({...todayData, newNote: e.target.value})}
@@ -1356,29 +1504,49 @@ export default function App() {
               </div>
             </div>
 
-            {/* Research Panel Sidebar */}
-            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500`}>
-              <h2 className="text-sm font-black mb-3 flex items-center gap-1.5"><Zap className="text-yellow-500" size={16} /> What Works for Me?</h2>
+            {/* Peak Performance Audit Panel Sidebar */}
+            <div className={`bg-slate-200/80 backdrop-blur-md rounded-[20px] p-4 shadow-sm border-[3px] ${currentTheme.border} transition-colors duration-500 flex flex-col max-h-[420px]`}>
+              <div className="flex items-center justify-between mb-3 shrink-0">
+                 <h2 className="text-sm font-black flex items-center gap-1.5 leading-none"><Zap className="text-yellow-500" size={16} /> Peak Performance Audit</h2>
+                 {auditScore > 0 && <span className="bg-white px-1.5 py-0.5 rounded font-black text-[9px] border-2 border-black leading-none">{auditScore} pts</span>}
+              </div>
+              
               {!researchUnlocked ? (
-                <div className="text-center py-6 px-3 border-2 border-dashed border-gray-400 rounded-[16px] bg-white">
+                <div className="text-center py-6 px-3 border-2 border-dashed border-gray-400 rounded-[16px] bg-white mt-auto mb-auto">
                   <p className="text-[9px] text-gray-500 font-bold leading-tight">Reach {startingScore + 10}% Overall Health to unlock your custom "What Works for Me?" panel!</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {Object.keys(researchData).map(cat => (
-                    <div key={cat} className={`p-2 rounded-xl border-2 border-black transition-all ${researchData[cat].approved ? 'bg-emerald-50' : 'bg-white'}`}>
+                <div className="space-y-2 overflow-y-auto pr-1.5 custom-scrollbar flex-1">
+                  {Object.keys(RESEARCH_QUESTIONS).map(cat => (
+                    <div key={cat} className={`p-2 rounded-xl border-2 transition-all ${researchData[cat]?.approved ? 'border-[#2D6A4F] bg-emerald-50' : 'border-black bg-white'}`}>
                       <div className="flex justify-between items-center mb-1.5">
-                        <h3 className="text-[7px] font-black text-gray-600 uppercase tracking-[0.2em]">{cat}</h3>
-                        {isEffectivelyStaff && <button onClick={() => handleApproveResearch(cat)} className={`p-0.5 rounded transition-colors border-2 border-black ${researchData[cat].approved ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-100'}`}><Zap size={10} /></button>}
-                        {!isEffectivelyStaff && researchData[cat].approved && <Sparkles size={10} className="text-[#2D6A4F]" />}
+                        <h3 className="text-[7px] font-black text-gray-600 uppercase tracking-[0.2em] leading-none">{RESEARCH_QUESTIONS[cat]?.title || cat}</h3>
+                        {isEffectivelyStaff && <button onClick={() => handleApproveResearch(cat)} className={`p-0.5 rounded transition-colors border-2 border-black leading-none ${researchData[cat]?.approved ? 'bg-[#2D6A4F] text-white hover:bg-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-100'}`}><Zap size={10} /></button>}
+                        {!isEffectivelyStaff && researchData[cat]?.approved && <Sparkles size={10} className="text-[#2D6A4F]" />}
                       </div>
-                      {cat !== 'extra' ? (
-                        <select className="w-full p-1 text-[9px] font-bold rounded bg-gray-50 outline-none border-2 border-black text-gray-800" disabled={isEffectivelyStaff || researchData[cat].approved}>
-                          <option value="">Pending entry...</option>
+                      <div className="flex flex-col gap-1.5">
+                        <select 
+                          className={`w-full p-1.5 text-[9px] font-bold rounded-md outline-none border-2 transition-colors leading-tight ${getResearchColorClass(cat, researchData[cat]?.value)}`}
+                          value={researchData[cat]?.value || ''}
+                          onChange={(e) => handleResearchChange(cat, 'value', e.target.value)}
+                          disabled={isEffectivelyStaff || researchData[cat]?.approved}
+                        >
+                          <option value="">-- Select --</option>
+                          {RESEARCH_QUESTIONS[cat]?.options.map(opt => (
+                            <option key={opt.text} value={opt.text}>{opt.text}</option>
+                          ))}
                         </select>
-                      ) : (
-                        <textarea className="w-full p-1.5 text-[9px] font-bold rounded bg-gray-50 outline-none border-2 border-black text-gray-800 h-10 resize-none" placeholder="Notes..." disabled={isEffectivelyStaff || researchData[cat].approved} />
-                      )}
+                        {researchData[cat]?.value?.includes('Other') && (
+                          <input 
+                            type="text"
+                            className="w-full p-1.5 text-[9px] font-bold rounded-md bg-white outline-none border-2 border-dashed border-gray-300 text-gray-800 leading-tight"
+                            placeholder="Please specify..."
+                            value={researchData[cat]?.other || ''}
+                            onChange={(e) => handleResearchChange(cat, 'other', e.target.value)}
+                            disabled={isEffectivelyStaff || researchData[cat]?.approved}
+                          />
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
