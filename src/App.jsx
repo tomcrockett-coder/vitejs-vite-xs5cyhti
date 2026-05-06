@@ -122,6 +122,7 @@ export default function App() {
   const [isNoneSubjects, setIsNoneSubjects] = useState(false);
   const [isNoneHabits, setIsNoneHabits] = useState(false);
   const [todayData, setTodayData] = useState({ caughtUpSubjects: [], completedHabits: [], newNote: '' });
+  const [editingStudentName, setEditingStudentName] = useState('');
   
   const [researchData, setResearchData] = useState({
     location: { value: '', other: '', approved: false },
@@ -234,6 +235,9 @@ export default function App() {
 
   useEffect(() => {
     if (!user || !selectedStudentId) return;
+
+    const studentObj = studentsList.find(s => s.id === selectedStudentId);
+    if (studentObj) setEditingStudentName(studentObj.name || '');
 
     const unsubUser = onSnapshot(doc(db, 'users', selectedStudentId), (docSnap) => {
       if(docSnap.exists()) setStudentPhoto(docSnap.data().photoURL || null);
@@ -431,6 +435,12 @@ export default function App() {
 
   const saveSettings = async () => {
     if (!selectedStudentId) return;
+    
+    if (editingStudentName.trim()) {
+      await setDoc(doc(db, 'users', selectedStudentId), { name: editingStudentName.trim() }, { merge: true });
+      if (user) loadTeacherData(user);
+    }
+
     await setDoc(doc(db, 'users', selectedStudentId, 'settings', 'config'), {
       subjects: subjects.filter(s => s.trim() !== ''),
       habits: habits.filter(h => h.trim() !== ''),
@@ -954,6 +964,14 @@ export default function App() {
           
           <div className="bg-white p-5 rounded-2xl border border-gray-200 text-left space-y-4 max-w-3xl mx-auto shadow-sm">
             <div className="space-y-3">
+              <h3 className="font-black text-base text-gray-800 border-b border-gray-100 pb-1.5 flex items-center gap-2"><User size={16} className="text-blue-500"/> Profile Information</h3>
+              <div>
+                <label className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 h-3 flex items-center">Student Display Name</label>
+                <input type="text" className={`w-full p-2 bg-gray-50 border-2 border-black rounded-lg font-bold text-sm text-gray-700 outline-none focus:${currentTheme.border}`} value={editingStudentName} onChange={e => setEditingStudentName(e.target.value)} />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
               <h3 className="font-black text-base text-gray-800 border-b border-gray-100 pb-1.5 flex items-center gap-2"><Flame size={16} className="text-orange-500"/> Scoring Metrics</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
