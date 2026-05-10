@@ -107,7 +107,8 @@ const fetchAudio = async (key, url) => {
   }
 };
 
-fetchAudio('click', 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+// Swapped to the exact stapler sound from Clean Slate
+fetchAudio('click', 'https://assets.mixkit.co/active_storage/sfx/2995/2995-preview.mp3');
 fetchAudio('unclick', 'https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3');
 fetchAudio('powerup', 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
 
@@ -377,7 +378,6 @@ export default function App() {
 
   const healthScore = useMemo(() => {
     let bonus = 0;
-    // Assuming standard 2 point bonus per 'approved' star like before
     Object.values(researchData).forEach(item => { if (item?.approved) bonus += 2; });
     
     let calculated = startingScore;
@@ -403,7 +403,6 @@ export default function App() {
     return Math.round((earned / possible) * 100) + teacherDailyAdjustment;
   }, [todayData, activeSubjects.length, activeHabits.length, isSubmittedToday, isEditingToday, todaysHistory, teacherDailyAdjustment]);
 
-  // Calculate specific Audit Score based on form options (Max 100)
   const auditScore = useMemo(() => {
     return Object.keys(RESEARCH_QUESTIONS).reduce((sum, cat) => {
       const val = researchData[cat]?.value;
@@ -1220,21 +1219,35 @@ export default function App() {
                     <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
                       <p className="font-bold text-gray-800 text-xs mb-2">Select classes with <strong className={currentTheme.text}>{goalText}</strong>:</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {activeSubjects.map(sub => (
-                          <button 
-                            key={sub} 
-                            onClick={() => { const current = todayData.caughtUpSubjects.includes(sub); setTodayData({...todayData, caughtUpSubjects: current ? todayData.caughtUpSubjects.filter(s => s !== sub) : [...todayData.caughtUpSubjects, sub]}); current ? playUnclick() : playClick(); setIsNoneSubjects(false); }} 
-                            className={`px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left flex items-center gap-2 border-black ${todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-                            {todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
-                            <span className="truncate">{sub}</span>
-                          </button>
-                        ))}
+                        {activeSubjects.map(sub => {
+                          const isChecked = todayData.caughtUpSubjects.includes(sub) && !isNoneSubjects;
+                          return (
+                            <button 
+                              key={sub} 
+                              onClick={() => { 
+                                const current = todayData.caughtUpSubjects.includes(sub); 
+                                setTodayData({...todayData, caughtUpSubjects: current ? todayData.caughtUpSubjects.filter(s => s !== sub) : [...todayData.caughtUpSubjects, sub]}); 
+                                current ? playUnclick() : playClick(); 
+                                setIsNoneSubjects(false); 
+                              }} 
+                              className={`relative overflow-hidden px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left border-black ${isChecked ? 'shadow-sm text-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                              <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-emerald-600 via-emerald-300 to-slate-100 transition-all duration-1000 ease-in-out z-0 ${isChecked ? 'h-full' : 'h-0'}`}></div>
+                              <div className="relative z-10 flex items-center gap-2">
+                                {isChecked ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                                <span className="truncate">{sub}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                       <button 
                         onClick={() => { const next = !isNoneSubjects; setIsNoneSubjects(next); setTodayData({...todayData, caughtUpSubjects: []}); next ? playClick() : playUnclick(); }} 
-                        className={`mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left flex items-center gap-2 ${isNoneSubjects ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
-                        {isNoneSubjects ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
-                        <span className="truncate">I am not fully caught up in any classes yet.</span>
+                        className={`relative overflow-hidden mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left ${isNoneSubjects ? 'shadow-sm text-[#1B4332]' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-emerald-600 via-emerald-300 to-slate-100 transition-all duration-1000 ease-in-out z-0 ${isNoneSubjects ? 'h-full' : 'h-0'}`}></div>
+                        <div className="relative z-10 flex items-center gap-2">
+                          {isNoneSubjects ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                          <span className="truncate">I am not fully caught up in any classes yet.</span>
+                        </div>
                       </button>
                     </div>
 
@@ -1242,21 +1255,35 @@ export default function App() {
                     <div className="bg-white border-2 border-gray-200 p-3 rounded-[16px] shadow-sm">
                       <p className="font-bold text-gray-800 text-xs mb-2">Target Habits:</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {activeHabits.map(hab => (
-                          <button 
-                            key={hab} 
-                            onClick={() => { const current = todayData.completedHabits.includes(hab); setTodayData({...todayData, completedHabits: current ? todayData.completedHabits.filter(h => h !== hab) : [...todayData.completedHabits, hab]}); current ? playUnclick() : playClick(); setIsNoneHabits(false); }} 
-                            className={`px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left flex items-center gap-2 border-black ${todayData.completedHabits.includes(hab) && !isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
-                            {todayData.completedHabits.includes(hab) && !isNoneHabits ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
-                            <span className="line-clamp-2">{hab}</span>
-                          </button>
-                        ))}
+                        {activeHabits.map(hab => {
+                          const isChecked = todayData.completedHabits.includes(hab) && !isNoneHabits;
+                          return (
+                            <button 
+                              key={hab} 
+                              onClick={() => { 
+                                const current = todayData.completedHabits.includes(hab); 
+                                setTodayData({...todayData, completedHabits: current ? todayData.completedHabits.filter(h => h !== hab) : [...todayData.completedHabits, hab]}); 
+                                current ? playUnclick() : playClick(); 
+                                setIsNoneHabits(false); 
+                              }} 
+                              className={`relative overflow-hidden px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] leading-tight transition-all text-left border-black ${isChecked ? 'shadow-sm text-[#1B4332]' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+                              <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-emerald-600 via-emerald-300 to-slate-100 transition-all duration-1000 ease-in-out z-0 ${isChecked ? 'h-full' : 'h-0'}`}></div>
+                              <div className="relative z-10 flex items-center gap-2">
+                                {isChecked ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                                <span className="line-clamp-2">{hab}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                       <button 
                         onClick={() => { const next = !isNoneHabits; setIsNoneHabits(next); setTodayData({...todayData, completedHabits: []}); next ? playClick() : playUnclick(); }} 
-                        className={`mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left flex items-center gap-2 ${isNoneHabits ? 'bg-[#E8F5E9] text-[#1B4332] shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
-                        {isNoneHabits ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
-                        <span className="truncate">I did not meet these habit goals today.</span>
+                        className={`relative overflow-hidden mt-2 w-full px-2.5 py-1.5 md:py-2 rounded-lg border-2 font-bold text-[11px] transition-all border-black text-left ${isNoneHabits ? 'shadow-sm text-[#1B4332]' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>
+                        <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-emerald-600 via-emerald-300 to-slate-100 transition-all duration-1000 ease-in-out z-0 ${isNoneHabits ? 'h-full' : 'h-0'}`}></div>
+                        <div className="relative z-10 flex items-center gap-2">
+                          {isNoneHabits ? <CheckCircle2 size={14} className="shrink-0" /> : <Circle size={14} className="text-gray-400 shrink-0" />} 
+                          <span className="truncate">I did not meet these habit goals today.</span>
+                        </div>
                       </button>
                     </div>
 
